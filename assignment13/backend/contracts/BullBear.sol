@@ -46,6 +46,7 @@ contract BullBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         "https://ipfs.io/ipfs/QmbKhBXVWmwrYsTPFYfroR2N7NAekAMxHUVg2CWks7i9qj?filename=simple_bear.json"
     ];
 
+    event TokensUpdated(string marketTrend);
 
     constructor() ERC721("BullBear", "BBTK") {}
 

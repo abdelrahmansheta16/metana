@@ -64,11 +64,22 @@ contract BullBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         currentPrice = getLatestPrice();
     }
 
-    function safeMint(address to, string memory uri) public onlyOwner {
+
+        function safeMint(address to) public  {
+        // Current counter value will be the minted token's token ID.
         uint256 tokenId = _tokenIdCounter.current();
+
+        // Increment it so next time it's correct when we call .current()
         _tokenIdCounter.increment();
+
+        // Mint the token
         _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
+
+        // Default to a bull NFT
+        string memory defaultUri = bullUrisIpfs[0];
+        _setTokenURI(tokenId, defaultUri);
+
+        console.log("DONE!!! minted token ", tokenId, " and assigned token url: ", defaultUri);
     }
 
     // The following functions are overrides required by Solidity.

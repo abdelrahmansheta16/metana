@@ -82,6 +82,10 @@ contract BullBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         console.log("DONE!!! minted token ", tokenId, " and assigned token url: ", defaultUri);
     }
 
+    function checkUpkeep(bytes calldata /* checkData */) external view override returns (bool upkeepNeeded, bytes memory /*performData */) {
+         upkeepNeeded = (block.timestamp - lastTimeStamp) > interval;
+    }
+
     // The following functions are overrides required by Solidity.
 
     function _beforeTokenTransfer(

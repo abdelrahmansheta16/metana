@@ -90,6 +90,11 @@ contract BullBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         //We highly recommend revalidating the upkeep in the performUpkeep function
             lastTimeStamp = block.timestamp;         
             int latestPrice =  getLatestPrice();
+        
+            if (latestPrice == currentPrice) {
+                console.log("NO CHANGE -> returning!");
+                return;
+            }
     }
 
     // The following functions are overrides required by Solidity.

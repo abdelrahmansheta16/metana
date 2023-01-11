@@ -106,6 +106,9 @@ contract BullBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
                 console.log("ITS BULL TIME");
                 updateAllTokenUris("bull");
             }
+
+            // update currentPrice
+            currentPrice = latestPrice;
     }
 
     // The following functions are overrides required by Solidity.

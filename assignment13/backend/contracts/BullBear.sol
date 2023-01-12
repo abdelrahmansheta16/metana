@@ -88,6 +88,7 @@ contract BullBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     function performUpkeep(bytes calldata /* performData */ ) external override {
         //We highly recommend revalidating the upkeep in the performUpkeep function
+        if ((block.timestamp - lastTimeStamp) > interval ) {
             lastTimeStamp = block.timestamp;         
             int latestPrice =  getLatestPrice();
         
@@ -109,6 +110,12 @@ contract BullBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
             // update currentPrice
             currentPrice = latestPrice;
+        } else {
+            console.log(
+                " INTERVAL NOT UP!"
+            );
+            return;
+        }
     }
 
     // The following functions are overrides required by Solidity.

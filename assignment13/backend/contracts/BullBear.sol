@@ -118,6 +118,19 @@ contract BullBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         }
     }
 
+    // Helpers
+    function getLatestPrice() public view returns (int256) {
+         (
+            /*uint80 roundID*/,
+            int price,
+            /*uint startedAt*/,
+            /*uint timeStamp*/,
+            /*uint80 answeredInRound*/
+        ) = pricefeed.latestRoundData();
+
+        return price; //  example price returned 3034715771688
+    }
+
     // The following functions are overrides required by Solidity.
 
     function _beforeTokenTransfer(

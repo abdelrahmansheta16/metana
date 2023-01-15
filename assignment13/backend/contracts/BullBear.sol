@@ -148,6 +148,13 @@ contract BullBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         emit TokensUpdated(trend);
     }
 
+    function setPriceFeed(address newFeed) public onlyOwner {
+        pricefeed = AggregatorV3Interface(newFeed);
+    }
+    function setInterval(uint256 newInterval) public onlyOwner {
+        interval = newInterval;
+    }
+
     // The following functions are overrides required by Solidity.
 
     function _beforeTokenTransfer(

@@ -155,6 +155,10 @@ contract BullBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         interval = newInterval;
     }
 
+    function compareStrings(string memory a, string memory b) internal pure returns (bool) {
+        return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
+    }
+
     // The following functions are overrides required by Solidity.
 
     function _beforeTokenTransfer(

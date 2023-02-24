@@ -49,6 +49,19 @@ const Home = () => {
 
               {/* Action Forms */}
               <div>
+                <p className="text-xl font-semibold">Action Forms</p>
+                {/* Form to Send ERC-20 Tokens */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendEthers(
+                      e.target.amount.value,
+                      e.target.recipient.value,
+                      selectedERC20Contract // Pass the selected ERC-20 contract address
+                    );
+                  }}
+                >
+                </form>
               </div>
             </div>
           </div>

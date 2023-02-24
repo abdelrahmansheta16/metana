@@ -77,6 +77,17 @@ const Home = () => {
                     Send Ethers
                   </button>
                 </form>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendERC20(
+                      e.target.amount.value,
+                      e.target.recipient.value,
+                      selectedERC20Contract // Pass the selected ERC-20 contract address
+                    );
+                  }}
+                >
+                </form>
               </div>
             </div>
           </div>

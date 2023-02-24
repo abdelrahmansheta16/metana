@@ -61,6 +61,12 @@ const Home = () => {
                     );
                   }}
                 >
+                  <div className="mb-4">
+                    <label htmlFor="amount" className="block font-medium">
+                      Ethers Amount in Wei
+                    </label>
+                    <input type="number" name="amount" id="amount" className="border rounded-md px-3 py-1" />
+                  </div>
                 </form>
               </div>
             </div>

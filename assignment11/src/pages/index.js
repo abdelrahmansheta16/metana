@@ -46,6 +46,10 @@ const Home = () => {
                 {/* Display ERC-1155 token balance */}
                 <p>ERC-1155 Token Balance: {erc1155TokenBalance.length} Tokens</p>
               </div>
+
+              {/* Action Forms */}
+              <div>
+              </div>
             </div>
           </div>
         </div>

@@ -34,6 +34,18 @@ const Home = () => {
           {/* Main Content */}
           <div className="p-4 max-w-screen-xl mx-auto">
             <div className="bg-white shadow-lg rounded-md p-4 space-y-4">
+              {/* Account Details */}
+              <div>
+                <p className="text-xl font-semibold">Account Details</p>
+                <p>Address: {accountData.address}</p>
+                <p>Balance: {accountData.balance}</p>
+                {/* Display ERC-20 token balance */}
+                <p>ERC-20 Token Balance: {erc20TokenBalance.length} Tokens</p>
+                {/* Display ERC-721 token balance */}
+                <p>ERC-721 Token Balance: {erc721TokenBalance.length} Tokens</p>
+                {/* Display ERC-1155 token balance */}
+                <p>ERC-1155 Token Balance: {erc1155TokenBalance.length} Tokens</p>
+              </div>
             </div>
           </div>
         </div>

@@ -18,6 +18,16 @@ const Home = () => {
                 <option value="sepolia">Sepolia</option>
                 {/* Add more network options here */}
               </select>
+              <select
+                value={selectedAccount}
+                onChange={handleAccountChange}
+                className="bg-white text-blue-500 border border-blue-500 rounded-md px-3 py-1"
+              >
+                <option value="">Select Account</option>
+                <option value="0x1234567890abcdef">0x1234567890abcdef</option>
+                <option value="0xabcdef123456789">0xabcdef123456789</option>
+                {/* Add more account options here */}
+              </select>
             </div>
           </div>
         </div>

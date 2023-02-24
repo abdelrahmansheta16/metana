@@ -73,6 +73,9 @@ const Home = () => {
                     </label>
                     <input type="text" name="recipient" id="recipient" className="border rounded-md px-3 py-1" />
                   </div>
+                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-md">
+                    Send Ethers
+                  </button>
                 </form>
               </div>
             </div>

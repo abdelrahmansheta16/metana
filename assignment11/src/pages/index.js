@@ -30,6 +30,12 @@ const Home = () => {
               </select>
             </div>
           </div>
+
+          {/* Main Content */}
+          <div className="p-4 max-w-screen-xl mx-auto">
+            <div className="bg-white shadow-lg rounded-md p-4 space-y-4">
+            </div>
+          </div>
         </div>
       ) : null}
     </div>

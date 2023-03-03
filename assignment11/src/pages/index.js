@@ -186,6 +186,12 @@ const Home = () => {
                     );
                   }}
                 >
+                  <div className="mb-4">
+                    <label htmlFor="tokenId" className="block font-medium">
+                      ERC-1155 Token ID
+                    </label>
+                    <input type="text" name="tokenId" id="tokenId" className="border rounded-md px-3 py-1" />
+                  </div>
                 </form>
               </div>
             </div>

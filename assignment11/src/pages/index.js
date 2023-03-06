@@ -173,6 +173,20 @@ const Home = () => {
                     Send ERC-721 Tokens
                   </button>
                 </form>
+
+                {/* Form to Send ERC-1155 Tokens */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendERC1155(
+                      e.target.tokenId.value,
+                      e.target.amount.value,
+                      e.target.recipient.value,
+                      selectedERC1155Contract // Pass the selected ERC-1155 contract address
+                    );
+                  }}
+                >
+                </form>
               </div>
             </div>
           </div>

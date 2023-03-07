@@ -192,6 +192,12 @@ const Home = () => {
                     </label>
                     <input type="text" name="tokenId" id="tokenId" className="border rounded-md px-3 py-1" />
                   </div>
+                  <div className="mb-4">
+                    <label htmlFor="amount" className="block font-medium">
+                      Amount
+                    </label>
+                    <input type="number" name="amount" id="amount" className="border rounded-md px-3 py-1" />
+                  </div>
                 </form>
               </div>
             </div>

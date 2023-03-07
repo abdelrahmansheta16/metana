@@ -208,6 +208,14 @@ const Home = () => {
                     <label htmlFor="erc1155Contract" className="block font-medium">
                       Select ERC-1155 Contract
                     </label>
+                    <select
+                      name="erc1155Contract"
+                      id="erc1155Contract"
+                      className="border rounded-md px-3 py-1"
+                      value={selectedERC1155Contract}
+                      onChange={(e) => setSelectedERC1155Contract(e.target.value)}
+                    >
+                    </select>
                   </div>
                 </form>
               </div>

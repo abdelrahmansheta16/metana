@@ -204,6 +204,11 @@ const Home = () => {
                     </label>
                     <input type="text" name="recipient" id="recipient" className="border rounded-md px-3 py-1" />
                   </div>
+                  <div className="mb-4">
+                    <label htmlFor="erc1155Contract" className="block font-medium">
+                      Select ERC-1155 Contract
+                    </label>
+                  </div>
                 </form>
               </div>
             </div>

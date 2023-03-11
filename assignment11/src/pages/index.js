@@ -215,6 +215,14 @@ const Home = () => {
                       value={selectedERC1155Contract}
                       onChange={(e) => setSelectedERC1155Contract(e.target.value)}
                     >
+                      <option>
+                        Select the Contract Address
+                      </option>
+                      {erc1155ContractAddresses.map((address) => (
+                        <option key={address} value={address}>
+                          {address}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </form>

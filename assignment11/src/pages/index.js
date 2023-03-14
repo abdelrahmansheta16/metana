@@ -1,6 +1,19 @@
+import { fundAccount, getBalance, getNFTBalance, getTokenBalance, sendERC1155Tokens, sendERC20Tokens, sendERC721Tokens } from '@/utils/functions';
+import axios from 'axios';
+import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 
 const Home = () => {
+  const router = useRouter();
+  const [selectedNetwork, setSelectedNetwork] = useState('Ethereum');
+  const [user, setUser] = useState({});
+  const [selectedAccount, setSelectedAccount] = useState('');
+  const [activities, setActivities] = useState([]);
+  const [isNew, setIsNew] = useState(true);
+  const [accountData, setAccountData] = useState({
+    address: '0x1234567890abcdef',
+    balance: '10 ETH',
+  });
 
   return (
     <div>

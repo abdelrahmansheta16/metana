@@ -18,6 +18,11 @@ const Home = () => {
     balance: '10 ETH',
   });
 
+  // State variables to store selected contract addresses
+  const [selectedERC20Contract, setSelectedERC20Contract] = useState();
+  const [selectedERC721Contract, setSelectedERC721Contract] = useState();
+  const [selectedERC1155Contract, setSelectedERC1155Contract] = useState();
+
   return (
     <div>
       {!isNew ? (

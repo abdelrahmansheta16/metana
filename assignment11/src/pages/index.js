@@ -8,6 +8,9 @@ const Home = () => {
   const [selectedNetwork, setSelectedNetwork] = useState('Ethereum');
   const [user, setUser] = useState({});
   const [selectedAccount, setSelectedAccount] = useState('');
+  const [erc20TokenBalance, setErc20TokenBalance] = useState('');
+  const [erc721TokenBalance, setErc721TokenBalance] = useState('');
+  const [erc1155TokenBalance, setErc1155TokenBalance] = useState('');
   const [activities, setActivities] = useState([]);
   const [isNew, setIsNew] = useState(true);
   const [accountData, setAccountData] = useState({

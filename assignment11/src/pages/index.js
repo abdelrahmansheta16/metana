@@ -86,6 +86,10 @@ const Home = () => {
     setSelectedNetwork(event.target.value);
   };
 
+  const handleAccountChange = (event) => {
+    setSelectedAccount(event.target.value);
+  };
+
   return (
     <div>
       {!isNew ? (

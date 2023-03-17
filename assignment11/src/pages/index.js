@@ -61,6 +61,9 @@ const Home = () => {
       console.log(uniqueContractsArray)
       return uniqueContractsArray;
     }
+
+    const getTokensInit = async () => {
+    }
   }, []);
 
   return (

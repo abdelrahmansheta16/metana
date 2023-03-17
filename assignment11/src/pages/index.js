@@ -63,6 +63,10 @@ const Home = () => {
     }
 
     const getTokensInit = async () => {
+      const tokens = await getTokenBalance(user.address);
+      console.log(tokens)
+      const nfts = await getNFTBalance(user.address);
+      console.log(nfts)
     }
   }, []);
 

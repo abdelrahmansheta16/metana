@@ -32,6 +32,12 @@ const Home = () => {
     const user = JSON.parse(localStorage.getItem('user'));
     setUser(user);
     console.log(user)
+    if (user) {
+      setIsNew(false)
+    } else {
+      router.push('/newUser')
+      setIsNew(true);
+    }
   }, []);
 
   return (

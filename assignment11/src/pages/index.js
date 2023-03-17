@@ -38,6 +38,13 @@ const Home = () => {
       router.push('/newUser')
       setIsNew(true);
     }
+
+    const getBalanceInit = async () => {
+      let balance = await getBalance(user.address);
+      balance = balance.toString() + 'ETH';
+      console.log(user)
+      setAccountData({ address: user.address, balance })
+    }
   }, []);
 
   return (

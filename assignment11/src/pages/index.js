@@ -45,6 +45,12 @@ const Home = () => {
       console.log(user)
       setAccountData({ address: user.address, balance })
     }
+
+    const getContractsArray = (array) => {
+      console.log(array)
+      // Use a Set to store unique names
+      const uniqueContracts = new Set();
+    }
   }, []);
 
   return (

@@ -50,6 +50,12 @@ const Home = () => {
       console.log(array)
       // Use a Set to store unique names
       const uniqueContracts = new Set();
+
+      // Use map to extract the "name" property and add it to the Set
+      array.forEach((obj) => {
+        uniqueContracts.add(obj.contractAddress);
+      });
+      console.log(uniqueContracts)
     }
   }, []);
 

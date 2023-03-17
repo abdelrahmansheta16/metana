@@ -72,6 +72,9 @@ const Home = () => {
       setErc721TokenBalance(erc721);
       setErc1155TokenBalance(erc1155);
       setErc20TokenBalance(tokens);
+      setErc20ContractAddresses(getContractsArray(tokens));
+      setErc721ContractAddresses(getContractsArray(erc721));
+      setErc1155ContractAddresses(getContractsArray(erc1155));
     }
   }, []);
 

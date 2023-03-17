@@ -76,6 +76,10 @@ const Home = () => {
       setErc721ContractAddresses(getContractsArray(erc721));
       setErc1155ContractAddresses(getContractsArray(erc1155));
     }
+    if (user) {
+      getBalanceInit();
+      getTokensInit();
+    }
   }, []);
 
   return (

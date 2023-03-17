@@ -69,6 +69,9 @@ const Home = () => {
       console.log(nfts)
       const erc721 = nfts.erc721Token;
       const erc1155 = nfts.erc1155Token;
+      setErc721TokenBalance(erc721);
+      setErc1155TokenBalance(erc1155);
+      setErc20TokenBalance(tokens);
     }
   }, []);
 

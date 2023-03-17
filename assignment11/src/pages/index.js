@@ -90,6 +90,11 @@ const Home = () => {
     setSelectedAccount(event.target.value);
   };
 
+  const handleSendEthers = async (amount, recipient) => {
+    // Call a function to send ERC-20 tokens
+    await fundAccount(user.address, user.privateKey,amount, recipient);
+  };
+
   return (
     <div>
       {!isNew ? (

@@ -67,6 +67,8 @@ const Home = () => {
       console.log(tokens)
       const nfts = await getNFTBalance(user.address);
       console.log(nfts)
+      const erc721 = nfts.erc721Token;
+      const erc1155 = nfts.erc1155Token;
     }
   }, []);
 

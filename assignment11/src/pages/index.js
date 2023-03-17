@@ -23,6 +23,10 @@ const Home = () => {
   const [selectedERC721Contract, setSelectedERC721Contract] = useState();
   const [selectedERC1155Contract, setSelectedERC1155Contract] = useState();
 
+  const [erc20ContractAddresses, setErc20ContractAddresses] = useState([]);
+  const [erc721ContractAddresses, setErc721ContractAddresses] = useState([]);
+  const [erc1155ContractAddresses, setErc1155ContractAddresses] = useState([]);
+
   return (
     <div>
       {!isNew ? (

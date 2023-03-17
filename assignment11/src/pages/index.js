@@ -56,6 +56,10 @@ const Home = () => {
         uniqueContracts.add(obj.contractAddress);
       });
       console.log(uniqueContracts)
+      // Convert the Set back to an array (if needed)
+      const uniqueContractsArray = [...uniqueContracts];
+      console.log(uniqueContractsArray)
+      return uniqueContractsArray;
     }
   }, []);
 

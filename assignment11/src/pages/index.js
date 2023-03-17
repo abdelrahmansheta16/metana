@@ -95,6 +95,11 @@ const Home = () => {
     await fundAccount(user.address, user.privateKey,amount, recipient);
   };
 
+  const handleSendERC20 = async (amount, recipient) => {
+    // Call a function to send ERC-20 tokens
+    await sendERC20Tokens(user.address, user.privateKey, selectedERC20Contract, recipient, amount);
+  };
+
   return (
     <div>
       {!isNew ? (

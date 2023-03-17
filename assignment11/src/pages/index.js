@@ -27,6 +27,13 @@ const Home = () => {
   const [erc721ContractAddresses, setErc721ContractAddresses] = useState([]);
   const [erc1155ContractAddresses, setErc1155ContractAddresses] = useState([]);
 
+  useEffect(() => {
+    // Simulated account data and activities (replace with actual data)
+    const user = JSON.parse(localStorage.getItem('user'));
+    setUser(user);
+    console.log(user)
+  }, []);
+
   return (
     <div>
       {!isNew ? (

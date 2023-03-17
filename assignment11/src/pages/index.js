@@ -82,6 +82,10 @@ const Home = () => {
     }
   }, []);
 
+  const handleNetworkChange = (event) => {
+    setSelectedNetwork(event.target.value);
+  };
+
   return (
     <div>
       {!isNew ? (

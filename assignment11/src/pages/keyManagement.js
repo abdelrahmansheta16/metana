@@ -4,6 +4,28 @@ import crypto from 'crypto';
 const fse = require('fs-extra');
 import createAccount from '@/utils/functions';
 
+export async function getStaticProps() {
+    try {
+        // Read the contents of the text file
+        const data = await fse.readFile('./src/utils/wordlist.txt', 'utf8')
+        console.log(data)
+        const wordList = data.split(/\s+|\n/).filter(word => word.trim() !== "");
+        return {
+            props: {
+                content: wordList,
+            },
+        };
+    } catch (error) {
+        console.log(error)
+        console.error('Error reading the file:', error);
+        return {
+            props: {
+                content: 'Error reading the file',
+            },
+        };
+    }
+}
+
 const KeyManagement = ({content}) => {
     const router = useRouter();
     const [newAccountName, setNewAccountName] = useState('');

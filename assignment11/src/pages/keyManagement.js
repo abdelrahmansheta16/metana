@@ -31,6 +31,15 @@ const KeyManagement = ({content}) => {
     const [newAccountName, setNewAccountName] = useState('');
     const [generatedKeyPair, setGeneratedKeyPair] = useState(null);
 
+    const generateKeyPair = async () => {
+        // Replace this with actual logic to generate key pairs securely
+        const user = await createAccount(content);
+        console.log(user);
+        const privateKeyHash = crypto.createHash('sha256').update(user.privateKey.toString('hex')).digest('hex');
+        localStorage.setItem('user', JSON.stringify(user));
+        setGeneratedKeyPair(user);
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="p-8 max-w-md w-full space-y-4 bg-white shadow-lg rounded-md">

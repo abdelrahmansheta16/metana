@@ -1,7 +1,6 @@
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import crypto from 'crypto';
-const fse = require('fs-extra');
 
 import createAccount from '@/utils/functions';
 

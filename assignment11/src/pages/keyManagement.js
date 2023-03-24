@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import crypto from 'crypto';
+const fse = require('fs-extra');
 import createAccount from '@/utils/functions';
 
 export async function getStaticProps() {
@@ -25,7 +26,7 @@ export async function getStaticProps() {
     }
 }
 
-const KeyManagement = ({content}) => {
+const KeyManagement = ({ content }) => {
     const router = useRouter();
     const [newAccountName, setNewAccountName] = useState('');
     const [generatedKeyPair, setGeneratedKeyPair] = useState(null);
@@ -37,7 +38,6 @@ const KeyManagement = ({content}) => {
         const privateKeyHash = crypto.createHash('sha256').update(user.privateKey.toString('hex')).digest('hex');
         localStorage.setItem('user', JSON.stringify(user));
         setGeneratedKeyPair(user);
-        router.push('/');
     };
 
     return (

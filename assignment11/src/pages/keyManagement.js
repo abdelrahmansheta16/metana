@@ -67,6 +67,15 @@ const KeyManagement = ({content}) => {
                         Generate Key Pair
                     </button>}
                 </div>
+
+                {/* Display Generated Key Pair */}
+                {generatedKeyPair && (
+                    <div>
+                        <p className="text-lg font-bold">Generated Key Pair</p>
+                        <p className="text-lg">Account Address: {generatedKeyPair.address}</p>
+                        <p className="text-lg">24-word Mnemonic: {generatedKeyPair.mnemonic}</p>
+                    </div>
+                )}
             </div>
         </div>
     );

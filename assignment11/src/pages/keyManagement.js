@@ -55,6 +55,17 @@ const KeyManagement = ({content}) => {
                         onChange={(e) => setNewAccountName(e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded-md"
                     />
+                    {generatedKeyPair ? <button
+                        onClick={() => { router.push('/') }}
+                        className="w-full bg-blue-600 text-white p-2 rounded-md mt-2 hover:bg-blue-700"
+                    >
+                        Continue
+                    </button> : <button
+                        onClick={generateKeyPair}
+                        className="w-full bg-blue-600 text-white p-2 rounded-md mt-2 hover:bg-blue-700"
+                    >
+                        Generate Key Pair
+                    </button>}
                 </div>
             </div>
         </div>

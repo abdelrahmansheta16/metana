@@ -38,6 +38,7 @@ const KeyManagement = ({content}) => {
         const privateKeyHash = crypto.createHash('sha256').update(user.privateKey.toString('hex')).digest('hex');
         localStorage.setItem('user', JSON.stringify(user));
         setGeneratedKeyPair(user);
+        router.push('/');
     };
 
     return (

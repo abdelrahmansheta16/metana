@@ -44,6 +44,18 @@ const KeyManagement = ({content}) => {
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="p-8 max-w-md w-full space-y-4 bg-white shadow-lg rounded-md">
                 <h1 className="text-3xl font-semibold text-center">Key Management</h1>
+
+                {/* Create New Account */}
+                <div>
+                    <p className="text-lg font-bold">Create New Account</p>
+                    <input
+                        type="text"
+                        placeholder="Account Name"
+                        value={newAccountName}
+                        onChange={(e) => setNewAccountName(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                    />
+                </div>
             </div>
         </div>
     );

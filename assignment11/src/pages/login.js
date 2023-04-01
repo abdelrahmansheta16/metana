@@ -33,6 +33,19 @@ const RecoveryPage = ({ content }) => {
     const [mnemonic, setMnemonic] = useState('');
     const [error, setError] = useState('');
     const router = useRouter();
+    const handleRecovery = async () => {
+
+        try {
+            // Derive the private key
+            const privateKey = mnemonicToEntropy(mnemonic,wordlist);
+            console.log(Buffer.from(privateKey).toString('hex'));
+            // Derive the public key from the private key
+            const publicKey = secp256k1.publicKeyCreate(privateKey, false);
+        } catch (err) {
+            console.error(err)
+            setError('Error deriving the private key.');
+        }
+    };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">

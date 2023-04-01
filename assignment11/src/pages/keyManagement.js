@@ -26,7 +26,7 @@ export async function getStaticProps() {
     }
 }
 
-const KeyManagement = ({ content }) => {
+const KeyManagement = ({content}) => {
     const router = useRouter();
     const [newAccountName, setNewAccountName] = useState('');
     const [generatedKeyPair, setGeneratedKeyPair] = useState(null);

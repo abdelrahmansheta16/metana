@@ -8,7 +8,28 @@ import crypto from 'crypto';
 import { publicToAddress, secp256k1, toChecksumAddress } from 'ethereumjs-util';
 import { ethers } from 'ethers';
 
-const RecoveryPage = () => {
+// export async function getStaticProps() {
+//     try {
+//         // Read the contents of the text file
+//         const data = await fse.readFile('./src/utils/wordlist.txt', 'utf8')
+//         console.log(data)
+//         const wordList = data.split(/\s+|\n/).filter(word => word.trim() !== "");
+//         return {
+//             props: {
+//                 content: wordList,
+//             },
+//         };
+//     } catch (error) {
+//         console.log(error)
+//         console.error('Error reading the file:', error);
+//         return {
+//             props: {
+//                 content: 'Error reading the file',
+//             },
+//         };
+//     }
+// }
+const RecoveryPage = ({ content }) => {
     const [mnemonic, setMnemonic] = useState('');
     const [error, setError] = useState('');
     const router = useRouter();
@@ -16,7 +37,7 @@ const RecoveryPage = () => {
 
         try {
             // Derive the private key
-            const privateKey = mnemonicToEntropy(mnemonic, wordlist);
+            const privateKey = mnemonicToEntropy(mnemonic,wordlist);
             console.log(Buffer.from(privateKey).toString('hex'));
             // Derive the public key from the private key
             const publicKey = secp256k1.publicKeyCreate(privateKey, false);
@@ -27,7 +48,7 @@ const RecoveryPage = () => {
             console.log(address)
             const user = {
                 privateKey: Buffer.from(privateKey).toString('hex'),
-                publicKey: Buffer.from(publicKey).toString('hex'),
+                publicKey:Buffer.from(publicKey).toString('hex'),
                 address,
                 mnemonic
             };

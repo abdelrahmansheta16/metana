@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-
+import { HDKey } from 'ethereum-cryptography/hdkey';
+import { mnemonicToEntropy, mnemonicToSeed } from 'ethereum-cryptography/bip39';
+const { wordlist } = require("ethereum-cryptography/bip39/wordlists/english");
 const RecoveryPage = ({ content }) => {
     const [mnemonic, setMnemonic] = useState('');
     const [error, setError] = useState('');

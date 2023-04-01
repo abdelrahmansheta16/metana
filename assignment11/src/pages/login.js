@@ -79,6 +79,7 @@ const RecoveryPage = ({ content }) => {
                     >
                         Recover
                     </button>
+                    {error && <p className="text-red-500 mt-2">{error}</p>}
                 </div>
             </div>
         </div>

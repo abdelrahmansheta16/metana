@@ -73,6 +73,12 @@ const RecoveryPage = ({ content }) => {
                         onChange={(e) => setMnemonic(e.target.value)}
                         className="w-full border border-gray-300 rounded-md p-2 mt-2"
                     />
+                    <button
+                        onClick={handleRecovery}
+                        className="w-full bg-blue-500 text-white p-2 rounded-md mt-4 hover:bg-blue-600"
+                    >
+                        Recover
+                    </button>
                 </div>
             </div>
         </div>

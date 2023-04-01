@@ -48,7 +48,7 @@ const RecoveryPage = ({ content }) => {
             console.log(address)
             const user = {
                 privateKey: Buffer.from(privateKey).toString('hex'),
-                publicKey:Buffer.from(publicKey).toString(),
+                publicKey:Buffer.from(publicKey).toString('hex'),
                 address,
                 mnemonic
             };

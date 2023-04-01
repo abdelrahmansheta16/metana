@@ -65,6 +65,15 @@ const RecoveryPage = ({ content }) => {
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="max-w-md w-full bg-white p-8 rounded-md shadow-lg space-y-4">
                 <h1 className="text-3xl font-semibold text-center">Recovery Page</h1>
+                <div>
+                    <label className="text-lg">Enter your 24-word mnemonic phrase:</label>
+                    <input
+                        type="text"
+                        value={mnemonic}
+                        onChange={(e) => setMnemonic(e.target.value)}
+                        className="w-full border border-gray-300 rounded-md p-2 mt-2"
+                    />
+                </div>
             </div>
         </div>
     );

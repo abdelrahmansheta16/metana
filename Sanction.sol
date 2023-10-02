@@ -13,10 +13,9 @@ contract CustomToken is ERC20 {
 
     // Modifier to restrict functions to the centralAuthority
     modifier onlyCentralAuthority() {
-        require(
-            msg.sender == centralAuthority,
-            "Only the central authority can call this function"
-        );
+        if (msg.sender != centralAuthority) {
+            revert("Only the central authority can call this function");
+        }
         _;
     }
 
@@ -34,28 +33,37 @@ contract CustomToken is ERC20 {
         isSanctioned[target] = false;
     }
 
-    // ERC20 transfer function overridden to check for sanctions
-    function transfer(
-        address to,
-        uint256 amount
-    ) public override returns (bool) {
-        require(
-            !isSanctioned[msg.sender] && !isSanctioned[to],
-            "Sanctioned addresses cannot send or receive tokens"
-        );
-        return super.transfer(to, amount);
-    }
+    // // ERC20 transfer function overridden to check for sanctions
+    // function transfer(
+    //     address to,
+    //     uint256 amount
+    // ) public override returns (bool) {
+    //     require(
+    //         !isSanctioned[msg.sender] && !isSanctioned[to],
+    //         "Sanctioned addresses cannot send or receive tokens"
+    //     );
+    //     return super.transfer(to, amount);
+    // }
 
-    // ERC20 transferFrom function overridden to check for sanctions
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) public override returns (bool) {
-        require(
-            !isSanctioned[from] && !isSanctioned[to],
-            "Sanctioned addresses cannot send or receive tokens"
-        );
-        return super.transferFrom(from, to, amount);
+    // // ERC20 transferFrom function overridden to check for sanctions
+    // function transferFrom(
+    //     address from,
+    //     address to,
+    //     uint256 amount
+    // ) public override returns (bool) {
+    //     require(
+    //         !isSanctioned[from] && !isSanctioned[to],
+    //         "Sanctioned addresses cannot send or receive tokens"
+    //     );
+    //     return super.transferFrom(from, to, amount);
+    // }
+
+    function _beforeTokenTransfer(
+        address _from,
+        address _to,
+        uint256
+    ) internal view override {
+        if (isSanctioned[_from] || isSanctioned[_to])
+            revert("Sanctioned addresses cannot send or receive tokens");
     }
 }

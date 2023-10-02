@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract TokenSale is ERC20, Ownable {
     uint256 public totalSupplyLimit;
-    uint256 public tokensSold;
 
     event TokensPurchased(address indexed buyer, uint256 amount);
     event TokensSoldBack(
@@ -20,41 +19,45 @@ contract TokenSale is ERC20, Ownable {
         string memory symbol,
         uint256 _totalSupplyLimit
     ) ERC20(name, symbol) {
-        require(_totalSupplyLimit <= 1 * 10 ** 6 * 10 ** 18);
+        if (_totalSupplyLimit > 1 * 10 ** 6 * 10 ** 18) {
+            revert("Total Supply limit must not exceed 1 million token");
+        }
         totalSupplyLimit = _totalSupplyLimit;
     }
 
     // Function to allow users to purchase tokens for 1 Ether
     function purchaseTokens() external payable {
-        require(tokensSold < totalSupplyLimit, "Token sale has ended");
-        require(
-            msg.value == 1 ether,
-            "You must send 1 Ether to purchase tokens"
-        );
-
+        if (totalSupply() > totalSupplyLimit) {
+            revert("Token sale has ended");
+        }
+        if (msg.value != 1 ether) {
+            revert("You must send 1 Ether to purchase tokens");
+        }
         uint256 tokensToMint = 1000 * 10 ** 18; // 1000 tokens with 18 decimals
-        require(
-            tokensSold + tokensToMint <= totalSupplyLimit,
-            "Exceeds total supply limit"
-        );
+        if (totalSupply() + tokensToMint > totalSupplyLimit) {
+            revert("Exceeds total supply limit");
+        }
         _mint(msg.sender, tokensToMint);
-        tokensSold += tokensToMint;
 
         emit TokensPurchased(msg.sender, tokensToMint);
     }
 
     // Function to allow users to sell back their tokens and receive a refund
     function sellBack(uint256 amount) external {
-        require(amount > 0, "Amount must be greater than 0");
-        require(balanceOf(msg.sender) >= amount, "Insufficient balance");
+        if (amount <= 0) {
+            revert("Amount must be greater than 0");
+        }
+        if (balanceOf(msg.sender) < amount) {
+            revert("Insufficient balance");
+        }
 
         uint256 refundAmount = ((amount * 10 ** 18) / 2000);
-        require(
-            address(this).balance >= refundAmount,
-            "Insufficient Ether in the contract"
-        );
 
-        transferFrom(msg.sender, address(this), amount);
+        if (address(this).balance < refundAmount) {
+            revert("Insufficient Ether in the contract");
+        }
+
+        _transfer(msg.sender, address(this), amount);
         payable(msg.sender).transfer(refundAmount);
 
         emit TokensSoldBack(msg.sender, amount, refundAmount);

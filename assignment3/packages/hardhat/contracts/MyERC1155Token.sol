@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-//0xCc358116Bbd72B2D66C17204b42DC19C4f003cC1
+//0x838cB26e2676D0cDf0F0438c626756f83FBEe3c5
 contract MyERC1155Token is ERC1155, ERC1155Burnable, Ownable {
     // Cooldown time for minting tokens 0-2
     uint256 public mintCooldown = 60 seconds;

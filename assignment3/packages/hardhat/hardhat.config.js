@@ -3,23 +3,20 @@ const { utils } = require("ethers");
 const fs = require("fs");
 const chalk = require("chalk");
 
-require("@nomiclabs/hardhat-waffle");
-require("@tenderly/hardhat-tenderly");
 
 require("hardhat-deploy");
 
-require("@eth-optimism/hardhat-ovm");
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
 
+
 // If not set, it uses ours Alchemy's default API key.
 // You can get your own at https://dashboard.alchemyapi.io
-const providerApiKey = "lzmbhOHHppa26sMIqCZAUldphE2jjkZr";
+const providerApiKey = process.env.PROVIDER_API_KEY;
 // If not set, it uses the hardhat account 0 private key.
-const deployerPrivateKey =
-  "dec68c695698c57c05cd2aab7b731f16e091edb104cdb4256d381d251c53a4f3";
+const deployerPrivateKey = process.env.DEPLOYER_PRIVATE_KEY;
 // If not set, it uses ours Etherscan default API key.
-const etherscanApiKey = "NF84Z95WF45S8XNHEQHGXJQPUQC2U8929E";
+const etherscanApiKey = process.env.ETHERSCAN_API_KEY;
 
 module.exports = {
   solidity: {
@@ -126,14 +123,7 @@ module.exports = {
     },
   },
   etherscan: {
-    apiKey: {
-      polygonMumbai: etherscanApiKey
-    }
-  },
-  verify: {
-    etherscan: {
-      apiKey: `${etherscanApiKey}`,
-    },
-  },
+    apiKey: etherscanApiKey
+  }
 };
 

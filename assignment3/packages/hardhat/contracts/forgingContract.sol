@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./MyERC1155Token.sol";
 
-//0x6c81D0aE392A30d38615BbD691d3613c4ae9cbd3
+//0xC7697bd7BD41052be82F979910139B9b61AAF61b
 contract ForgingContract is MyERC1155Token {
     IERC1155 public tokenContract;
 

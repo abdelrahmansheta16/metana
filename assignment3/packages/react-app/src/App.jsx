@@ -50,7 +50,7 @@ const { ethers } = require("ethers");
 */
 
 /// 📡 What chain are your contracts deployed to?
-const targetNetwork = NETWORKS.localhost; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
+const targetNetwork = NETWORKS.mumbai; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
 
 // 😬 Sorry for all the console logging
 const DEBUG = true;
@@ -288,24 +288,6 @@ function App(props) {
     readContracts && readContracts.ExampleExternalContract ? readContracts.ExampleExternalContract.address : null,
   );
   if (DEBUG) console.log("💵 exampleExternalContractBalance", exampleExternalContractBalance);
-
-  let completeDisplay = "";
-  if (complete) {
-    completeDisplay = (
-      <div style={{ padding: 64, backgroundColor: "#eeffef", fontWeight: "bold", color: "rgba(0, 0, 0, 0.85)" }} >
-        -- 💀 Staking App Fund Repatriation Executed 🪦 --
-        <Balance balance={exampleExternalContractBalance} fontSize={32} /> ETH locked!
-        <Button
-          type={"default"}
-          onClick={() => {
-            tx(writeContracts.ForgingContract.returnFunds());
-          }}
-        >
-          📡 Return!
-        </Button>
-      </div>
-    );
-  }
 
   /*
   const addressFromENS = useResolveName(mainnetProvider, "austingriffith.eth");
@@ -572,7 +554,7 @@ function App(props) {
               }}
               to="/"
             >
-              Staker UI
+              Forger UI
             </Link>
           </Menu.Item>
           <Menu.Item key="/contracts">
@@ -589,10 +571,9 @@ function App(props) {
 
         <Switch>
           <Route exact path="/">
-            {completeDisplay}
 
             <div style={{ padding: 8, marginTop: 16 }}>
-              <div>Staker Contract:</div>
+              <div>Forging Contract:</div>
               <Address value={readContracts && readContracts.ForgingContract && readContracts.ForgingContract.address} />
             </div>
 
@@ -701,62 +682,11 @@ function App(props) {
             </div>
             <Divider />
             <div style={{ padding: 8, marginTop: 16, fontWeight: "bold" }}>
-              <div>Claim Period Left:</div>
+              <div>Mint Cooldown Period:</div>
               {claimPeriodLeft && humanizeDuration(claimPeriodLeft.toNumber() * 1000)}
             </div>
 
-            <div style={{ padding: 8, marginTop: 16, fontWeight: "bold" }}>
-              <div>Withdrawal Period Left:</div>
-              {withdrawalTimeLeft && humanizeDuration(withdrawalTimeLeft.toNumber() * 1000)}
-            </div>
-
             <Divider />
-
-            <div style={{ padding: 8, fontWeight: "bold" }}>
-              <div>Total Available ETH in Contract:</div>
-              <Balance balance={stakerContractBalance} fontSize={64} />
-            </div>
-
-            <Divider />
-
-            <div style={{ padding: 8, fontWeight: "bold" }}>
-              <div>ETH Locked 🔒 in Staker Contract:</div>
-              <Balance balance={balanceStaked} fontSize={64} />
-            </div>
-
-            <div style={{ padding: 8 }}>
-              <Button
-                type={"default"}
-                onClick={() => {
-                  tx(writeContracts.ForgingContract.execute());
-                }}
-              >
-                📡 Execute!
-              </Button>
-            </div>
-
-            <div style={{ padding: 8 }}>
-              <Button
-                type={"default"}
-                onClick={() => {
-                  tx(writeContracts.ForgingContract.withdraw());
-                }}
-              >
-                🏧 Withdraw
-              </Button>
-            </div>
-
-            <div style={{ padding: 8 }}>
-              <Button
-                type={balanceStaked ? "success" : "primary"}
-                onClick={async () => {
-                  const transaction = await tx(writeContracts.ForgingContract.stake({ value: ethers.utils.parseEther("0.5") }));
-                  console.log(transaction)
-                }}
-              >
-                🥩 Stake 0.5 ether!
-              </Button>
-            </div>
 
             {/*
                 🎛 this scaffolding is full of commonly used components

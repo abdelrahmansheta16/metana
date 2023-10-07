@@ -4,7 +4,7 @@ const {
 } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
 const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 const { expect } = require("chai");
-import { ethers } from "hardhat";
+const { ethers } = require("hardhat");
 
 
 describe("ForgingContract", function () {
@@ -12,7 +12,7 @@ describe("ForgingContract", function () {
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
   async function deployOneYearLockFixture() {
-    const totalSupplyLimit = ethers.utils.parseEther("10000");
+    const totalSupplyLimit = ethers.parseEther("10000");
 
 
     // Contracts are deployed using the first signer/account by default
@@ -21,7 +21,7 @@ describe("ForgingContract", function () {
     const Forging = await ethers.getContractFactory("ForgingContract");
     const MyToken = await ethers.getContractFactory("MyERC1155Token");
     const myToken = await MyToken.deploy();
-    const contractAddress = myToken.address;
+    const contractAddress = myToken.target;
     const forging = await Forging.deploy(contractAddress);
 
     return { forging, owner, otherAccount, contractAddress };
@@ -57,19 +57,19 @@ describe("ForgingContract", function () {
         const { forging, owner } = await loadFixture(
           deployOneYearLockFixture
         );
-        const before0 = forging.balanceOf(owner.address, 0);
+        const before0 = await forging.balanceOf(owner.address, 0);
         await forging.burnToMintToken3(10);
-        const after0 = forging.balanceOf(owner.address, 0);
-        expect(before0).to.equal(after0 + 10);
+        const after0 = await forging.balanceOf(owner.address, 0);
+        expect(before0).to.equal(after0 + 10n);
       });
       it("Should burn the required amount of token 1 from the sender", async function () {
         const { forging, owner } = await loadFixture(
           deployOneYearLockFixture
         );
-        const before1 = forging.balanceOf(owner.address, 0);
+        const before1 = await forging.balanceOf(owner.address, 0);
         await forging.burnToMintToken3(10);
-        const after1 = forging.balanceOf(owner.address, 0);
-        expect(before1).to.equal(after1 + 10);
+        const after1 = await forging.balanceOf(owner.address, 0);
+        expect(before1).to.equal(after1 + 10n);
       });
     });
     describe("Mint", function () {
@@ -77,10 +77,10 @@ describe("ForgingContract", function () {
         const { forging, owner } = await loadFixture(
           deployOneYearLockFixture
         );
-        const before3 = forging.balanceOf(owner.address, 0);
+        const before3 = await forging.balanceOf(owner.address, 3);
         await forging.burnToMintToken3(10);
-        const after3 = forging.balanceOf(owner.address, 0);
-        expect(before3).to.equal(after3 - 10);
+        const after3 = await forging.balanceOf(owner.address, 3);
+        expect(before3).to.equal(after3 - 10n);
       });
     });
   });
@@ -112,10 +112,10 @@ describe("ForgingContract", function () {
         const { forging, owner } = await loadFixture(
           deployOneYearLockFixture
         );
-        const before0 = forging.balanceOf(owner.address, 0);
+        const before0 = await forging.balanceOf(owner.address, 0);
         await forging.tradeTokens(0, 1, 10);
-        const after0 = forging.balanceOf(owner.address, 0);
-        expect(before0).to.equal(after0 + 10);
+        const after0 = await forging.balanceOf(owner.address, 0);
+        expect(before0).to.equal(after0 + 10n);
       });
     });
     describe("Mint", function () {
@@ -123,10 +123,10 @@ describe("ForgingContract", function () {
         const { forging, owner } = await loadFixture(
           deployOneYearLockFixture
         );
-        const before1 = forging.balanceOf(owner.address, 0);
+        const before1 = await forging.balanceOf(owner.address, 1);
         await forging.tradeTokens(0, 1, 10);
-        const after1 = forging.balanceOf(owner.address, 0);
-        expect(before1).to.equal(after1 - 10);
+        const after1 = await forging.balanceOf(owner.address, 1);
+        expect(before1).to.equal(after1 - 10n);
       });
     });
   });
@@ -164,17 +164,17 @@ describe("ForgingContract", function () {
     describe("Events", function () {
       it("Should emit an event on minting", async function () {
         const { forging, owner } = await loadFixture(deployOneYearLockFixture);
-        await expect(forging.mintTokens(1, 3)).to.emit(forging, "Minted").withArgs(owner, 1, 3);
+        await expect(forging.mintTokens(1, 3)).to.emit(forging, "Minted").withArgs(owner.address, 1, 3);
       });
     });
 
     describe("Mint", function () {
       it("Should mint the tokens to the sender", async function () {
         const { forging, owner } = await loadFixture(deployOneYearLockFixture);
-        const before0 = forging.balanceOf(owner.address, 0);
+        const before0 = await forging.balanceOf(owner.address, 0);
         await forging.mintTokens(0, 10);
-        const after0 = forging.balanceOf(owner.address, 0);
-        expect(before0).to.equal(after0 - 10);
+        const after0 = await forging.balanceOf(owner.address, 0);
+        expect(before0).to.equal(after0 - 10n);
       });
     });
 

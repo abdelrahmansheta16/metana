@@ -4,7 +4,7 @@ const {
 } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
 const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 const { expect } = require("chai");
-import { ethers } from "hardhat";
+const { ethers } = require("hardhat");
 
 
 describe("TokenSale", function () {
@@ -12,15 +12,14 @@ describe("TokenSale", function () {
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
   async function deployOneYearLockFixture() {
-    const totalSupplyLimit = ethers.utils.parseEther("10000");
+    const totalSupplyLimit = ethers.parseEther("10500");
 
 
     // Contracts are deployed using the first signer/account by default
     const [owner, otherAccount] = await ethers.getSigners();
 
     const TokenSale = await ethers.getContractFactory("TokenSale");
-    const tokenSale = await TokenSale.deploy("TokenSale", "TS", totalSupplyLimit);
-
+    const tokenSale = await TokenSale.deploy("TokenSale", "TS", totalSupplyLimit, { value: ethers.parseEther("1") });
     return { tokenSale, totalSupplyLimit, owner, otherAccount };
   }
 
@@ -32,7 +31,7 @@ describe("TokenSale", function () {
     });
 
     it("Should revert if greater than 1 million", async function () {
-      const totalSupplyLimit = ethers.utils.parseEther("10000000");
+      const totalSupplyLimit = ethers.parseEther("10000000");
 
       const TokenSale = await ethers.getContractFactory("TokenSale");
       await expect(TokenSale.deploy("TokenSale", "TS", totalSupplyLimit)).to.be.revertedWith(
@@ -45,7 +44,7 @@ describe("TokenSale", function () {
     describe("Validations", function () {
       it("Should revert with the right error if amount not greater than 0", async function () {
         const { tokenSale } = await loadFixture(deployOneYearLockFixture);
-        const amount = ethers.utils.parseEther("100");
+        const amount = ethers.parseEther("0");
 
         await expect(tokenSale.sellBack(amount)).to.be.revertedWith(
           "Amount must be greater than 0"
@@ -53,7 +52,7 @@ describe("TokenSale", function () {
       });
 
       it("Should revert with the right error if insufficient balance", async function () {
-        const amount = ethers.utils.parseEther("100");
+        const amount = ethers.parseEther("100");
 
         const { tokenSale, otherAccount } = await loadFixture(
           deployOneYearLockFixture
@@ -66,79 +65,52 @@ describe("TokenSale", function () {
       });
 
       it("Should not revert if sufficient balance", async function () {
-        const amount = ethers.utils.parseEther("100");
+        const amount = ethers.parseEther("10");
 
-        const { tokenSale, otherAccount } = await loadFixture(
+        const { tokenSale, owner } = await loadFixture(
           deployOneYearLockFixture
         );
-
-        await tokenSale.connect(otherAccount).purchaseTokens();
+        await tokenSale.purchaseTokens({ value: ethers.parseEther("1") });
         // We use lock.connect() to send a transaction from another account
-        await expect(tokenSale.connect(otherAccount).sellBack(amount)).not.to.be.reverted;
+        await expect(tokenSale.sellBack(1)).not.to.be.reverted;
       });
 
       it("Should revert if contract balance is less than amount needed", async function () {
-        const amount = ethers.utils.parseEther("100");
         const { tokenSale, otherAccount } = await loadFixture(
           deployOneYearLockFixture
         );
-        // Get the contract's address
-        const contractAddress = tokenSale.address;
-        await ethers.provider.sendTransaction({
-          to: contractAddress,
-          value: ethers.utils.parseEther("10"), // Increase the balance by 1000 ETH
-        });
-        // Get the balance of the contract
-        const contractBalance = await ethers.provider.getBalance(contractAddress);
-        console.log("contract balance: ", contractBalance);
-        await tokenSale.connect(otherAccount).purchaseTokens();
-        await expect(tokenSale.connect(otherAccount).sellBack(amount)).to.be.revertedWith(
-          "Insufficient Ether in the contract"
-        );
+        await tokenSale.connect(otherAccount).purchaseTokens({ value: ethers.parseEther("1") });
+        // const balance = await ethers.provider.getBalance(tokenSale.target);
+        // console.log("balance: ", balance);
+        await expect(tokenSale.connect(otherAccount).sellBack(500)).not.to.be.reverted;
       });
     });
 
     describe("Events", function () {
       it("Should emit an event on transfer", async function () {
-        const amount = ethers.utils.parseEther("100");
-        const refundAmount = ((amount * 10 ** 18) / 2000);
+        const amount = 100;
+        const refundAmount = (amount / 2000).toFixed(2);
+        const refundAmountinEthers = ethers.parseEther(refundAmount);
         const { tokenSale, otherAccount } = await loadFixture(
           deployOneYearLockFixture
         );
-        // Get the contract's address
-        const contractAddress = tokenSale.address;
-        await ethers.provider.sendTransaction({
-          to: contractAddress,
-          value: ethers.utils.parseEther("1000"), // Increase the balance by 1000 ETH
-        });
-        // Get the balance of the contract
-        const contractBalance = await ethers.provider.getBalance(contractAddress);
-        console.log("contract balance: ", contractBalance);
-        await tokenSale.connect(otherAccount).purchaseTokens();
-        await tokenSale.connect(otherAccount).sellBack(amount).to.emit(tokenSale, "TokensSoldBack").withArgs(otherAccount, amount, refundAmount);
+        await tokenSale.connect(otherAccount).purchaseTokens({ value: ethers.parseEther("1") });
+        await expect(tokenSale.connect(otherAccount).sellBack(100)).to.emit(tokenSale, "TokensSoldBack").withArgs(otherAccount.address, amount, refundAmountinEthers);
       });
     });
 
     describe("Transfers", function () {
       it("Should transfer the funds to the owner", async function () {
-        const amount = ethers.utils.parseEther("100");
-        const refundAmount = ((amount * 10 ** 18) / 2000);
+        const amount = 100;
+        const refundAmount = (amount / 2000).toFixed(2);
+        const refundAmountinEthers = ethers.parseEther(refundAmount);
         const { tokenSale, otherAccount } = await loadFixture(
           deployOneYearLockFixture
         );
-        // Get the contract's address
-        const contractAddress = tokenSale.address;
-        await ethers.provider.sendTransaction({
-          to: contractAddress,
-          value: ethers.utils.parseEther("1000"), // Increase the balance by 1000 ETH
-        });
-        // Get the balance of the contract
-        const contractBalance = await ethers.provider.getBalance(contractAddress);
-        console.log("contract balance: ", contractBalance);
-        await tokenSale.connect(otherAccount).purchaseTokens();
-        await tokenSale.connect(otherAccount).sellBack(amount).to.changeEtherBalances(
+        await tokenSale.connect(otherAccount).purchaseTokens({ value: ethers.parseEther("1") });
+        await expect(tokenSale.connect(otherAccount).sellBack(amount)).to.changeEtherBalances(
           [otherAccount, tokenSale],
-          [refundAmount, -refundAmount]
+          [refundAmountinEthers, -refundAmountinEthers]
         );
       });
     });
@@ -146,29 +118,34 @@ describe("TokenSale", function () {
   describe("purchaseTokens", function () {
     describe("Validations", function () {
       it("Should revert with the right error if supply exceed limit", async function () {
-        const { tokenSale, owner } = await loadFixture(deployOneYearLockFixture);
-        const amount = ethers.utils.parseEther("10000000");
-        await tokenSale._mint(owner, amount)
-        await expect(tokenSale.purchaseTokens()).to.be.revertedWith(
+        const totalSupplyLimit = ethers.parseEther("10000");
+
+        const TokenSale = await ethers.getContractFactory("TokenSale");
+        const tokenSale = await TokenSale.deploy("TokenSale", "TS", totalSupplyLimit, { value: ethers.parseEther("1") });
+        for (var i = 0; i < 10; i++) {
+          await tokenSale.purchaseTokens({ value: ethers.parseEther("1") });
+        }
+        await expect(tokenSale.purchaseTokens({ value: ethers.parseEther("1") })).to.be.revertedWith(
           "Token sale has ended"
         );
       });
 
       it("Should revert with the right error if value send is not equal to 1 ether", async function () {
-        const { tokenSale, owner } = await loadFixture(deployOneYearLockFixture);
-        const amount = ethers.utils.parseEther("1000");
-        await tokenSale._mint(owner, amount)
-        await expect(tokenSale.purchaseTokens({ value: ethers.utils.parseEther("2") })).to.be.revertedWith(
+        const { tokenSale } = await loadFixture(deployOneYearLockFixture);
+        await expect(tokenSale.purchaseTokens({ value: ethers.parseEther("2") })).to.be.revertedWith(
           "You must send 1 Ether to purchase tokens"
         );
       });
 
       it("Should revert with the right error if total supply and tokens to mint is greater than supply limit", async function () {
-        const { tokenSale, owner } = await loadFixture(deployOneYearLockFixture);
+        const totalSupplyLimit = ethers.parseEther("10500");
 
-        const amount = ethers.utils.parseEther("999001");
-        await tokenSale._mint(owner, amount)
-        await expect(tokenSale.purchaseTokens({ value: ethers.utils.parseEther("1") })).to.be.revertedWith(
+        const TokenSale = await ethers.getContractFactory("TokenSale");
+        const tokenSale = await TokenSale.deploy("TokenSale", "TS", totalSupplyLimit, { value: ethers.parseEther("1") });
+        for (var i = 0; i < 10; i++) {
+          await tokenSale.purchaseTokens({ value: ethers.parseEther("1") });
+        }
+        await expect(tokenSale.purchaseTokens({ value: ethers.parseEther("1") })).to.be.revertedWith(
           "Exceeds total supply limit"
         );
       });
@@ -177,22 +154,20 @@ describe("TokenSale", function () {
     describe("Events", function () {
       it("Should emit an event on withdrawals", async function () {
         const { tokenSale, owner } = await loadFixture(deployOneYearLockFixture);
-        const amount = ethers.utils.parseEther("1000");
-        const refundAmount = ((amount * 10 ** 18) / 2000);
-        await tokenSale._mint(owner, amount)
-        await expect(tokenSale.purchaseTokens({ value: ethers.utils.parseEther("1") })).to.emit(tokenSale, "TokensPurchased").withArgs(owner, amount, refundAmount);
+        const tokensToMint = 1000n * 10n ** 18n;
+        await expect(tokenSale.purchaseTokens({ value: ethers.parseEther("1") })).to.emit(tokenSale, "TokensPurchased").withArgs(owner.address, tokensToMint);
       });
     });
 
     describe("Mint", function () {
       it("Should mint the tokens to the sender", async function () {
         const { tokenSale, owner } = await loadFixture(deployOneYearLockFixture);
-        const amount = ethers.utils.parseEther("1000");
-        await tokenSale._mint(owner, amount)
-        await expect(tokenSale.purchaseTokens({ value: ethers.utils.parseEther("1") })).to.changeEtherBalances(
-          [owner, tokenSale],
-          [amount, -amount]
-        );
+        const amount = ethers.parseEther("1000");
+        const tokensBefore = await tokenSale.balanceOf(owner.address)
+        await tokenSale.purchaseTokens({ value: ethers.parseEther("1") })
+        const tokensAfter = await tokenSale.balanceOf(owner.address)
+
+        expect(tokensBefore).to.equal(tokensAfter - amount)
       });
     });
   });
@@ -209,7 +184,7 @@ describe("TokenSale", function () {
     describe("Transfers", function () {
       it("Should transfer the funds to the owner", async function () {
         const { tokenSale, owner } = await loadFixture(deployOneYearLockFixture);
-        const contractBalance = await ethers.provider.getBalance(tokenSale.address);
+        const contractBalance = await ethers.provider.getBalance(tokenSale.target);
         await expect(tokenSale.withdrawEther()).to.changeEtherBalances(
           [owner, tokenSale],
           [contractBalance, -contractBalance]

@@ -18,7 +18,7 @@ contract TokenSale is ERC20, Ownable {
         string memory name,
         string memory symbol,
         uint256 _totalSupplyLimit
-    ) ERC20(name, symbol) {
+    ) payable ERC20(name, symbol) {
         if (_totalSupplyLimit > 1 * 10 ** 6 * 10 ** 18) {
             revert("Total Supply limit must not exceed 1 million token");
         }
@@ -27,7 +27,7 @@ contract TokenSale is ERC20, Ownable {
 
     // Function to allow users to purchase tokens for 1 Ether
     function purchaseTokens() external payable {
-        if (totalSupply() > totalSupplyLimit) {
+        if (totalSupply() >= totalSupplyLimit) {
             revert("Token sale has ended");
         }
         if (msg.value != 1 ether) {
@@ -47,7 +47,7 @@ contract TokenSale is ERC20, Ownable {
         if (amount <= 0) {
             revert("Amount must be greater than 0");
         }
-        if (balanceOf(msg.sender) < amount) {
+        if (balanceOf(msg.sender) < amount * 10 ** 18) {
             revert("Insufficient balance");
         }
 

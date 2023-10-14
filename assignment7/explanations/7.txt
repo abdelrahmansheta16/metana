@@ -1,0 +1,1 @@
+//the CREATE takes whatever data in memory execute this data as an opcode and expect a return value. Then the EXTCODESIZE instruction return the size of that value.

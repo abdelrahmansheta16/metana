@@ -1,0 +1,1 @@
+//The codesize is equal to "a" which corresponds to 10 in decimals. The program takes the input value subtract the codesize from the input value and jumps to the result which in this case should be 6.

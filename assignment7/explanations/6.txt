@@ -1,1 +1,0 @@
-// The instruction CALLDATALOAD get the 32 byte data from slot 0 (in this case) 

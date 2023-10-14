@@ -1,1 +1,0 @@
-// The CALLDATASIZE instruction calculate the size of the data sent in bytes and push it to the stack. In this case the data is an 8 digits hexadecimal number and every 2 numbers is equivalent to 1 byte so 4(total number of bytes) is pushed onto the stack.

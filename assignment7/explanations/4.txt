@@ -1,1 +1,0 @@
-//6 XOR c(the code size) is equal to a which is the jumpdest location.

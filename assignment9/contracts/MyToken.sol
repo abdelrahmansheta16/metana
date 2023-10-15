@@ -1,11 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-//0xE6160A5dF0A8D03810a6B67087F897B0e2e9d8C6
-contract MyToken is ERC20, ERC20Burnable {
-    constructor() ERC20("MyToken", "MTN") {}
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
+contract MyTokenUpgradeable is
+    Initializable,
+    ERC20Upgradeable,
+    ERC20BurnableUpgradeable
+{
+    function initialize() external initializer {
+        __ERC20_init("MyToken", "MTN");
+    }
 
     function mint(address to, uint256 amount) public {
         _mint(to, amount);

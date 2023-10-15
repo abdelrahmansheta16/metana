@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 // import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-//0xd0C504B3A6BD5191BB79c6D6c8c659afB9187acD
 interface MyNFT {
     function ownerOf(uint256 tokenId) external view returns (address);
 
@@ -37,8 +36,8 @@ interface MyToken {
 }
 
 contract StakingContract {
-    MyNFT immutable nftContract;
-    MyToken immutable tokenContract;
+    MyNFT nftContract;
+    MyToken tokenContract;
     address private nftsHolder;
     uint256 public stakingDuration = 1 days;
     uint256 public rewardAmount = 10 * 10 ** 18; // 10 tokens with 18 decimals
@@ -47,7 +46,7 @@ contract StakingContract {
     mapping(uint256 => bool) public isDeposited;
     mapping(uint256 => address) public originalOwner;
 
-    constructor(address _stakingNFTAddress, address _erc20TokenAddress) {
+    function initialize(address _stakingNFTAddress, address _erc20TokenAddress) external {
         nftContract = MyNFT(_stakingNFTAddress);
         tokenContract = MyToken(_erc20TokenAddress);
         nftsHolder = msg.sender;

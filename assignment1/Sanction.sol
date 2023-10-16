@@ -2,34 +2,26 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract CustomToken is ERC20 {
-    address public centralAuthority;
+
+contract CustomToken is ERC20,Ownable {
     mapping(address => bool) public isSanctioned;
 
     constructor(string memory name, string memory symbol) ERC20(name, symbol) {
-        centralAuthority = msg.sender;
-    }
-
-    // Modifier to restrict functions to the centralAuthority
-    modifier onlyCentralAuthority() {
-        if (msg.sender != centralAuthority) {
-            revert("Only the central authority can call this function");
-        }
-        _;
     }
 
     // Function to add an address to the sanction list
     function addSanctionedAddress(
         address target
-    ) external onlyCentralAuthority {
+    ) external onlyOwner {
         isSanctioned[target] = true;
     }
 
     // Function to remove an address from the sanction list
     function removeSanctionedAddress(
         address target
-    ) external onlyCentralAuthority {
+    ) external onlyOwner {
         isSanctioned[target] = false;
     }
 

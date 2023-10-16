@@ -3,6 +3,8 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 
 //0xd0C504B3A6BD5191BB79c6D6c8c659afB9187acD
 interface MyNFT {
@@ -40,7 +42,6 @@ interface MyToken {
 contract StakingContract {
     MyNFT immutable nftContract;
     MyToken immutable tokenContract;
-    address private nftsHolder;
     uint256 public stakingDuration = 1 days;
     uint256 public rewardAmount = 10 * 10 ** 18; // 10 tokens with 18 decimals
 
@@ -51,7 +52,6 @@ contract StakingContract {
     constructor(address _stakingNFTAddress, address _erc20TokenAddress) {
         nftContract = MyNFT(_stakingNFTAddress);
         tokenContract = MyToken(_erc20TokenAddress);
-        nftsHolder = msg.sender;
     }
 
     function onERC721Received(
@@ -67,7 +67,7 @@ contract StakingContract {
         require(!isDeposited[tokenId], "You already deposited this NFT");
         isDeposited[tokenId] = true;
         stakingTimestamp[tokenId] = block.timestamp;
-        nftContract.safeTransferFrom(from, nftsHolder, tokenId);
+        nftContract.safeTransferFrom(from, owner(), tokenId);
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -86,7 +86,7 @@ contract StakingContract {
         );
         tokenContract.approveContract(msg.sender, address(this), rewardAmount);
         tokenContract.transferFrom(msg.sender, address(this), rewardAmount);
-        nftContract.safeTransferFrom(nftsHolder, msg.sender, tokenId);
+        nftContract.safeTransferFrom(owner(), msg.sender, tokenId);
         stakingTimestamp[tokenId] = block.timestamp;
     }
 

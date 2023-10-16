@@ -1,0 +1,1 @@
+//That's because CALLDATA push the value 8 onto the stack and then jump reads this value and jumps to the JUMPDEST instruction at location 08 passing all the revert instructions.

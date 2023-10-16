@@ -1,0 +1,1 @@
+// The objective of this puzzle was to deploy a code onto the smart contract that when called will revert so the CALL instruction will return 0

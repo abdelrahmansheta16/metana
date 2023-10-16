@@ -27,7 +27,6 @@ describe('TokenSaleChallenge', () => {
     const buyTx = await target.buy("115792089237316195423570985008687907853269984665640564039458", {
       value: "415992086870360064",
     });
-    console.log(await target.check())
 
     await buyTx.wait();
 

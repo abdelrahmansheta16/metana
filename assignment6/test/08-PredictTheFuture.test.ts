@@ -36,8 +36,6 @@ describe('PredictTheFutureChallenge', () => {
     }
     const first = await target.blockNumber();
     const second = await target.settlementBlockNumber();
-    console.log(first);
-    console.log(second);
     expect(await provider.getBalance(target.address)).to.equal(0);
     expect(await target.isComplete()).to.equal(true);
   });

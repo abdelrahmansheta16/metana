@@ -33,7 +33,6 @@ describe('GuessTheRandomNumberChallenge', () => {
       ["bytes32", "uint256"],
       [hash, timestamp]
     );
-    console.log(generatedAnswer)
     const hexString = generatedAnswer[generatedAnswer.length - 2] + generatedAnswer[generatedAnswer.length - 1];
     const uint8 = parseInt(hexString,16);
     await target.guess(uint8,{value:ethers.utils.parseEther('1')});

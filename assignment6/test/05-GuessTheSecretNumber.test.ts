@@ -25,13 +25,10 @@ describe('GuessTheSecretNumberChallenge', () => {
 
   it('exploit', async () => {
     const secret = await target.answerHash();
-    console.log(secret)
     for(var i = 0; i < 256; i++) {
     const numberAsBytes32 = ethers.utils.hexZeroPad(ethers.utils.hexlify(i), 32);
     const guess = ethers.utils.solidityKeccak256(["uint8"],[i]);
-    console.log(guess)
     if(guess == secret){
-      console.log(guess)
       await target.guess(i,{value:ethers.utils.parseEther('1')})
     }
     }

@@ -2,7 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-// import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+
 //0xd0C504B3A6BD5191BB79c6D6c8c659afB9187acD
 interface MyNFT {
     function ownerOf(uint256 tokenId) external view returns (address);
@@ -43,7 +44,7 @@ contract StakingContract {
     uint256 public stakingDuration = 1 days;
     uint256 public rewardAmount = 10 * 10 ** 18; // 10 tokens with 18 decimals
 
-    mapping(address => uint256) public stakingTimestamp;
+    mapping(uint256 => uint256) public stakingTimestamp;
     mapping(uint256 => bool) public isDeposited;
     mapping(uint256 => address) public originalOwner;
 
@@ -53,15 +54,22 @@ contract StakingContract {
         nftsHolder = msg.sender;
     }
 
-    // function onERC721Received(
-    //     address ,
-    //     address from,
-    //     uint256 tokenId,
-    //     bytes calldata
-    // ) external returns (bytes4){
-    //     originalOwner[tokenId] = from;
-    //     return IERC721Receiver.onERC721Received.selector;
-    // }
+    function onERC721Received(
+        address,
+        address from,
+        uint256 tokenId,
+        bytes calldata
+    ) external returns (bytes4) {
+        require(
+            nftContract.ownerOf(tokenId) == from,
+            "You do not own this NFT"
+        );
+        require(!isDeposited[tokenId], "You already deposited this NFT");
+        isDeposited[tokenId] = true;
+        stakingTimestamp[tokenId] = block.timestamp;
+        nftContract.safeTransferFrom(from, nftsHolder, tokenId);
+        return IERC721Receiver.onERC721Received.selector;
+    }
 
     function getNFT(uint256 tokenId) external {
         require(
@@ -69,7 +77,7 @@ contract StakingContract {
             "You already own this NFT"
         );
         require(
-            stakingTimestamp[msg.sender] + stakingDuration <= block.timestamp,
+            stakingTimestamp[tokenId] + stakingDuration <= block.timestamp,
             "Staking not available yet"
         );
         require(
@@ -79,30 +87,30 @@ contract StakingContract {
         tokenContract.approveContract(msg.sender, address(this), rewardAmount);
         tokenContract.transferFrom(msg.sender, address(this), rewardAmount);
         nftContract.safeTransferFrom(nftsHolder, msg.sender, tokenId);
-        stakingTimestamp[msg.sender] = block.timestamp;
+        stakingTimestamp[tokenId] = block.timestamp;
     }
 
-    function depositNFT(uint256 tokenId) external {
-        require(
-            nftContract.ownerOf(tokenId) == msg.sender,
-            "You do not own this NFT"
-        );
-        require(!isDeposited[tokenId], "You already deposited this NFT");
-        isDeposited[tokenId] = true;
-        stakingTimestamp[msg.sender] = block.timestamp;
-    }
+    // function depositNFT(uint256 tokenId) external {
+    //     require(
+    //         nftContract.ownerOf(tokenId) == msg.sender,
+    //         "You do not own this NFT"
+    //     );
+    //     require(!isDeposited[tokenId], "You already deposited this NFT");
+    //     isDeposited[tokenId] = true;
+    //     stakingTimestamp[msg.sender] = block.timestamp;
+    // }
 
     function withdrawTokens(uint256 tokenId) external {
         require(
             nftContract.ownerOf(tokenId) == msg.sender,
             "You do not own this NFT"
         );
-        uint256 periods = (block.timestamp - stakingTimestamp[msg.sender]) /
+        uint256 periods = (block.timestamp - stakingTimestamp[tokenId]) /
             (5 seconds);
         require(periods > 0, "Withdrawal not available yet");
         require(isDeposited[tokenId], "You must deposit your NFT first");
         tokenContract.mint(msg.sender, rewardAmount * periods);
-        stakingTimestamp[msg.sender] = block.timestamp;
+        stakingTimestamp[tokenId] = block.timestamp;
     }
 
     function withdrawNFT(uint256 tokenId) external {
@@ -112,13 +120,5 @@ contract StakingContract {
         );
         isDeposited[tokenId] = false;
         nftContract.safeTransferFrom(address(this), msg.sender, tokenId);
-    }
-
-    function changeRewardAmount(uint256 _newRewardAmount) external {
-        rewardAmount = _newRewardAmount;
-    }
-
-    function changeStakingDuration(uint256 _newStakingDuration) external {
-        stakingDuration = _newStakingDuration;
     }
 }

@@ -25,31 +25,6 @@ contract CustomToken is ERC20,Ownable {
         isSanctioned[target] = false;
     }
 
-    // // ERC20 transfer function overridden to check for sanctions
-    // function transfer(
-    //     address to,
-    //     uint256 amount
-    // ) public override returns (bool) {
-    //     require(
-    //         !isSanctioned[msg.sender] && !isSanctioned[to],
-    //         "Sanctioned addresses cannot send or receive tokens"
-    //     );
-    //     return super.transfer(to, amount);
-    // }
-
-    // // ERC20 transferFrom function overridden to check for sanctions
-    // function transferFrom(
-    //     address from,
-    //     address to,
-    //     uint256 amount
-    // ) public override returns (bool) {
-    //     require(
-    //         !isSanctioned[from] && !isSanctioned[to],
-    //         "Sanctioned addresses cannot send or receive tokens"
-    //     );
-    //     return super.transferFrom(from, to, amount);
-    // }
-
     function _beforeTokenTransfer(
         address _from,
         address _to,

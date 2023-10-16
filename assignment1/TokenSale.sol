@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
-contract TokenSale is ERC20, Ownable {
+contract TokenSale is ERC20, ERC20Burnable, Ownable {
     uint256 public totalSupplyLimit;
 
     event TokensPurchased(address indexed buyer, uint256 amount);
@@ -57,7 +58,7 @@ contract TokenSale is ERC20, Ownable {
             revert("Insufficient Ether in the contract");
         }
 
-        _transfer(msg.sender, address(this), amount);
+        _burn(msg.sender, amount);
         payable(msg.sender).transfer(refundAmount);
 
         emit TokensSoldBack(msg.sender, amount, refundAmount);

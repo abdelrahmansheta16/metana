@@ -14,6 +14,7 @@ contract MyTokenUpgradeable is
         __ERC20_init("MyToken", "MTN");
     }
 
+
     function mint(address to, uint256 amount) public {
         _mint(to, amount);
     }

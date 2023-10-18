@@ -1,23 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.18;
+pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {BitMaps} from "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-contract AirDropToken is
-    ERC721,
-    ERC721Enumerable,
-    ERC721URIStorage,
-    ERC721Burnable,
-    Ownable
-{
+contract AirDropToken is ERC721, ERC721Burnable, Ownable {
     enum Stages {
-        AcceptMinting,
         PreMinting,
         PostMinting,
         NoSupply
@@ -25,12 +16,17 @@ contract AirDropToken is
 
     bytes32 private immutable merkleRoot;
     BitMaps.BitMap private whitelistClaimed;
+    BitMaps.BitMap private revealedTokens;
+    BitMaps.BitMap private allocatedTokens;
     BitMaps.BitMap private didWithdraw;
 
-    mapping(address => Stages) public stage = Stages.AcceptMinting;
-
+    Stages public stage = Stages.PreMinting;
+    mapping(address => uint) public memberIndex;
     mapping(address => uint256) public creationBlock;
+    address[] public mintedTokens;
     uint256 public revealBlockNumber;
+    uint256 public numOfWhiteListMembers;
+    uint private totalSupply;
     bool public revealed;
     mapping(address => bytes32) public commitment;
     mapping(address => uint256) public nftAllocations;
@@ -38,32 +34,32 @@ contract AirDropToken is
     event CommitmentSubmitted(bytes32 commitment);
     event AllocationRevealed(address recipient, uint256 nftID);
 
-    // modifier onlyBeforeReveal() {
-    //     require(block.number < revealBlockNumber, "Reveal period has ended.");
-    //     _;
-    // }
+    modifier onlyBeforeReveal() {
+        require(block.number < revealBlockNumber, "Reveal period has ended.");
+        _;
+    }
 
-    // modifier onlyAfterReveal() {
-    //     require(
-    //         block.number >= revealBlockNumber,
-    //         "Reveal period has not started yet."
-    //     );
-    //     _;
-    // }
+    modifier onlyAfterReveal() {
+        require(
+            block.number >= revealBlockNumber,
+            "Reveal period has not started yet."
+        );
+        _;
+    }
 
     modifier atStage(Stages _stage) {
         require(stage == _stage);
         _;
     }
 
-    modifier transitionAfter() {
-        _;
-        nextStage();
-    }
-
     modifier timedTransitions() {
         if (
-            stage == Stages.PreMinting && now >= creationBlock + 10
+            stage == Stages.PreMinting &&
+            mintedTokens.length >= numOfWhiteListMembers
+        ) {
+            nextStage();
+        } else if (
+            stage == Stages.PostMinting && mintedTokens.length >= totalSupply
         ) {
             nextStage();
         }
@@ -72,20 +68,22 @@ contract AirDropToken is
 
     constructor(
         bytes32 _merkleRoot,
-        address initialOwner
+        address initialOwner,
+        uint _totalSupply,
+        address[] memory whitelist
     ) ERC721("AirDropToken", "ADT") Ownable(initialOwner) {
+        setWhiteList(whitelist);
         revealBlockNumber = block.number + 10; // Reveal 10 blocks later
         revealed = false;
+        totalSupply = _totalSupply;
         merkleRoot = _merkleRoot;
+        numOfWhiteListMembers = whitelist.length;
     }
 
-    function safeMint(
-        address to,
-        uint256 tokenId,
-        string memory uri
-    ) public onlyOwner {
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
+    function setWhiteList(address[] memory _whitelist) private {
+        for (uint i = 0; i < _whitelist.length; i++) {
+            memberIndex[_whitelist[i]] = i;
+        }
     }
 
     // Transfer multiple NFTs to another address.
@@ -104,10 +102,13 @@ contract AirDropToken is
         }
     }
 
-    function whitelistMint(bytes32[] calldata proof, uint tokenId) external timedTransitions transitionAfter atStage(Stages.AcceptMinting) {
+    function whitelistMint(
+        bytes32[] calldata proof
+    ) external timedTransitions atStage(Stages.PreMinting) {
+        uint index = memberIndex[msg.sender];
         // check if already claimed
         require(
-            !BitMaps.get(whitelistClaimed, uint(uint160(msg.sender))),
+            !BitMaps.get(whitelistClaimed, index),
             "Address already claimed"
         );
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
@@ -115,10 +116,28 @@ contract AirDropToken is
             MerkleProof.verify(proof, merkleRoot, leaf),
             "Invalid Merkle Proof."
         );
-        BitMaps.setTo(whitelistClaimed, uint(uint160(msg.sender)),true);
+        BitMaps.setTo(whitelistClaimed, index, true);
+        mintedTokens[index] = msg.sender;
+        _safeMint(msg.sender, index);
+    }
 
-        bytes32 _commitment = keccak256(abi.encodePacked(tokenId));
-        submitCommitment(_commitment);
+    function normalMint(
+        bytes32[] calldata proof
+    ) external timedTransitions atStage(Stages.PostMinting) {
+        uint index = memberIndex[msg.sender];
+        // check if already claimed
+        require(
+            !BitMaps.get(whitelistClaimed, index),
+            "Address already claimed"
+        );
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+        require(
+            MerkleProof.verify(proof, merkleRoot, leaf),
+            "Invalid Merkle Proof."
+        );
+        BitMaps.setTo(whitelistClaimed, index, true);
+        mintedTokens[index] = msg.sender;
+        _safeMint(msg.sender, index);
     }
 
     function submitCommitment(
@@ -128,16 +147,25 @@ contract AirDropToken is
         emit CommitmentSubmitted(_commitment);
     }
 
-    function reveal(uint256 _tokenId) external onlyAfterReveal timedTransitions atStage(Stages.PostMinting) {
-        require(keccak256(abi.encodePacked(_tokenId)) == commitment[msg.sender], "Invalid reveal.");
-        require(!revealedTokens[_tokenId], "Token already revealed.");
+    function reveal(
+        uint256 _tokenId
+    ) external onlyAfterReveal timedTransitions atStage(Stages.PostMinting) {
+        require(
+            keccak256(abi.encodePacked(_tokenId)) == commitment[msg.sender],
+            "Invalid reveal."
+        );
+        require(memberIndex[msg.sender] == _tokenId, "Only owner can reveal");
+        require(
+            !BitMaps.get(revealedTokens, _tokenId),
+            "Token already revealed"
+        );
 
-        _mint(msg.sender, tokenId);
-        allocatedTokens[msg.sender] = tokenId;
-        revealedTokens[tokenId] = true;
+        BitMaps.setTo(revealedTokens, _tokenId, true);
     }
 
-    function withdraw(uint256 _tokenId) external onlyAfterReveal timedTransitions atStage(Stages.PostMinting) {
+    function withdraw(
+        uint256 _tokenId
+    ) external onlyAfterReveal timedTransitions atStage(Stages.PostMinting) {
         require(
             BitMaps.get(whitelistClaimed, uint(uint160(msg.sender))),
             "Address is not in the whitelist"
@@ -146,10 +174,10 @@ contract AirDropToken is
             !BitMaps.get(didWithdraw, uint(uint160(msg.sender))),
             "Address already withdrawn"
         );
-        BitMaps.setTo(didWithdraw, uint(uint160(msg.sender)),true);
-        _burn(tokenId);
-        (bool success,_) = payable(msg.sender).call{value:1 ether}("");
-        require(success,"Transfer failed");
+        BitMaps.setTo(didWithdraw, uint(uint160(msg.sender)), true);
+        _burn(_tokenId);
+        (bool success, ) = payable(msg.sender).call{value: 1 ether}("");
+        require(success, "Transfer failed");
     }
 
     function getAllocation() public view returns (uint256) {
@@ -158,5 +186,13 @@ contract AirDropToken is
 
     function canReveal() public view returns (bool) {
         return block.number >= revealBlockNumber && !revealed;
+    }
+
+    function nextStage() private {
+        require(
+            stage != Stages.NoSupply,
+            "Cannot transition from final state."
+        );
+        stage = Stages(uint256(stage) + 1);
     }
 }

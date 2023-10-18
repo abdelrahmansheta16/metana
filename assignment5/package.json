@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "alchemy-sdk": "^2.10.1",
+    "ethers": "^4.0.49",
     "next": "13.5.4",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",

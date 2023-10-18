@@ -1,114 +1,171 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
+import React, { useEffect, useState } from 'react';
 import Chart from 'chart.js/auto';
 import { Line } from 'react-chartjs-2';
-import { useEffect, useState } from 'react';
+import { ethers } from 'ethers';
 const { Network, Alchemy } = require("alchemy-sdk");
 
 // Optional Config object, but defaults to demo api-key and eth-mainnet.
 const settings = {
-  apiKey: "DOFOWOEL0fRBG3IigTR875L4XTzs4nXh", // Replace with your Alchemy API Key.
-  network: Network.ETH_MAINNET, // Replace with your network.
+    apiKey: "DOFOWOEL0fRBG3IigTR875L4XTzs4nXh", // Replace with your Alchemy API Key.
+    network: Network.ETH_MAINNET, // Replace with your network.
 };
 
 const alchemy = new Alchemy(settings);
+const AllCharts = () => {
+    // State for ERC20 token transfer data
+    const [transferVolumeData, setTransferVolumeData] = useState([]);
+    const [blockNumbers, setBlockNumbers] = useState([]);
 
-export default function Home() {
-  const [transferVolumeData, setTransferVolumeData] = useState([]);
-  const [blockNumbers, setBlockNumbers] = useState([]);
+    // State for BASEFEE data
+    const [basefeeData, setBasefeeData] = useState([]);
+    const [basefeeBlockNumbers, setBasefeeBlockNumbers] = useState([]);
 
-  useEffect(() => {
-    const erc20TokenAddress = '0xc3761EB917CD790B30dAD99f6Cc5b4Ff93C4F9eA';
+    // State for gasUsed/gasLimit ratio data
+    const [gasRatioData, setGasRatioData] = useState([]);
+    const [gasRatioBlockNumbers, setGasRatioBlockNumbers] = useState([]);
 
-    async function getTransferVolumeData() {
-      const transactions = await alchemy.core.getAssetTransfers({
-        fromBlock: "0x0",
-        toBlock: "latest",
-        contractAddresses: [erc20TokenAddress], // You can replace with contract of your choosing
-        excludeZeroValue: true,
-        category: ["erc20"],
-      });
-      console.log(transactions)
-      // Initialize an array to store the 10 subarrays
-      const blocksArray = new Array(10).fill([]);
+    useEffect(() => {
+        const erc20TokenAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+        const erc20Abi = [
+            "event Transfer(address indexed _from, address indexed _to, uint256 _value)"
+        ];
+        const provider = new ethers.providers.JsonRpcProvider('https://eth-mainnet.g.alchemy.com/v2/DOFOWOEL0fRBG3IigTR875L4XTzs4nXh');
 
-      // Use reduce to group transactions by block number
-      const groupedTransactions = transactions.transfers.reduce((accumulator, transaction) => {
-        const blockNumber = transaction.blockNum;
-        console.log(blockNumber)
-        accumulator[blockNumber] = accumulator[blockNumber] || [];
-        accumulator[blockNumber].push(transaction);
-        return accumulator;
-      }, {});
-      console.log(groupedTransactions);
-      // Filter out empty or undefined blocks
-      const filteredBlocks = blocksArray.map((_, index) => groupedTransactions[index] || []);
-      console.log(filteredBlocks)
-      const latestBlockNumber = await alchemy.core.getBlockNumber();
-      const startBlock = Math.max(0, latestBlockNumber - 10); // Look back 10 blocks
+        const contract = new ethers.Contract(erc20TokenAddress, erc20Abi, provider);
 
-      const transferVolumeData = [];
-      const blockNumbers = [];
+        async function getTransferVolumeData() {
+            const latestBlockNumber = await alchemy.core.getBlockNumber();
+            const startBlockNumber = Math.max(0, latestBlockNumber - 10);
 
-      for (let blockNumber = startBlock; blockNumber <= latestBlockNumber; blockNumber++) {
-        const block = await alchemy.core.getBlock(blockNumber, true); // Retrieve block details
-        let transferVolume = 0;
-        if (block.transactions) {
-          for (const tx of block.transactions) {
-            if (tx === erc20TokenAddress) {
-              console.log("hello")
-              transferVolume += Number(tx.value);
+            const filter = {
+                address: erc20TokenAddress,
+                fromBlock: startBlockNumber,
+                toBlock: 'latest', // Use 'latest' for the most recent block
+                topics: [ethers.utils.id('Transfer(address,address,uint256)')] // ERC-20 Transfer event topic
+            };
+
+            const transferEvents = await alchemy.core.getLogs(filter);
+            console.log(transferEvents);
+
+            const transferVolumeData = [];
+            const blockNumbers = [];
+
+            for (let blockNumber = startBlockNumber; blockNumber <= latestBlockNumber; blockNumber++) {
+                let transferVolume = 0;
+                for (const event of transferEvents) {
+                    console.log(event)
+                    const parsedLog = contract.interface.parseLog(event);
+                    console.log(parsedLog)
+                    if (event.blockNumber == blockNumber) {
+                        console.log("hello")
+                        transferVolume += Number(parsedLog.values._value.toString());
+                    }
+                }
+
+                transferVolumeData.push(transferVolume);
+                blockNumbers.push(blockNumber);
             }
-          }
+
+            setTransferVolumeData(transferVolumeData);
+            setBlockNumbers(blockNumbers);
         }
 
-        transferVolumeData.push(transferVolume);
-        blockNumbers.push(blockNumber);
-      }
+        async function getBasefeeData() {
+            const latestBlockNumber = await alchemy.core.getBlockNumber();
+            const startBlock = Math.max(0, latestBlockNumber - 10); // Look back 10 blocks
 
-      setTransferVolumeData(transferVolumeData);
-      setBlockNumbers(blockNumbers);
-    }
+            const basefeeData = [];
+            const blockNumbers = [];
 
-    getTransferVolumeData();
-  }, []);
+            for (let blockNumber = startBlock; blockNumber <= latestBlockNumber; blockNumber++) {
+                const block = await alchemy.core.getBlock(blockNumber);
+                const basefee = block.baseFeePerGas;
 
-  const data = {
-    labels: blockNumbers,
-    datasets: [
-      {
-        label: 'Transfer Volume',
-        data: transferVolumeData,
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 2,
-        fill: false,
-      },
-    ],
-  };
+                basefeeData.push(basefee.toString());
+                blockNumbers.push(blockNumber.toString());
+            }
+            console.log(basefeeData)
+            console.log(blockNumbers)
+            setBasefeeData(basefeeData);
+            setBasefeeBlockNumbers(blockNumbers);
+        }
 
-  // const options = {
-  //   scales: {
-  //     x: {
-  //       type: 'linear',
-  //       position: 'bottom',
-  //       title: {
-  //         display: true,
-  //         text: 'Block Number',
-  //       },
-  //     },
-  //     y: {
-  //       title: {
-  //         display: true,
-  //         text: 'BASEFEE',
-  //       },
-  //     },
-  //   },
-  // };
+        async function getGasRatioData() {
+            const latestBlockNumber = await alchemy.core.getBlockNumber();
+            const startBlock = Math.max(0, latestBlockNumber - 10); // Look back 10 blocks
 
-  return (
-    <div>
-      <h2>ERC20 Token Transfer Volume Chart</h2>
-      <Line data={data} />
-    </div>
-  );
+            const gasRatioData = [];
+            const blockNumbers = [];
+
+            for (let blockNumber = startBlock; blockNumber <= latestBlockNumber; blockNumber++) {
+                const block = await alchemy.core.getBlock(blockNumber);
+                const gasUsed = block.gasUsed;
+                const gasLimit = block.gasLimit;
+                const ratio = (gasUsed / gasLimit) * 100; // Calculate ratio as a percentage
+
+                gasRatioData.push(ratio);
+                blockNumbers.push(blockNumber);
+            }
+
+            setGasRatioData(gasRatioData);
+            setGasRatioBlockNumbers(blockNumbers);
+        }
+
+        // Fetch data for all three charts
+        getTransferVolumeData();
+        getBasefeeData();
+        getGasRatioData();
+    }, []);
+
+    // Create chart data and options for all three charts here
+    const transferData = {
+        labels: blockNumbers,
+        datasets: [
+            {
+                label: 'Transfer Volume',
+                data: transferVolumeData,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: false,
+            },
+        ],
+    };
+    const baseData = {
+        labels: basefeeBlockNumbers,
+        datasets: [
+            {
+                label: 'BASEFEE',
+                data: basefeeData,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: false,
+            },
+        ],
+    };
+    const ratioData = {
+        labels: gasRatioBlockNumbers,
+        datasets: [
+            {
+                label: 'GasUsed/GasLimit Ratio (%)',
+                data: gasRatioData,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: false,
+            },
+        ],
+    };
+    return (
+        <div>
+            <h2>ERC20 Token Transfer Volume Chart</h2>
+            <Line data={transferData} />
+
+            <h2>BASEFEE Chart</h2>
+            <Line data={baseData} />
+
+            <h2>GasUsed/GasLimit Ratio Chart</h2>
+            <Line data={ratioData} />
+        </div>
+    );
 };
+
+export default AllCharts;

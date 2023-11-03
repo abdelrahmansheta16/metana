@@ -18,7 +18,7 @@ import "@chainlink/contracts/src/v0.8/KeeperCompatible.sol";
 import "hardhat/console.sol";
 
 
-contract BullBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
+contract BullBear is ERC721, ERC721Enumerable, ERC721URIStorage, KeeperCompatibleInterface, Ownable  {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIdCounter;
@@ -48,20 +48,16 @@ contract BullBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     event TokensUpdated(string marketTrend);
 
-        // For testing with the mock on Rinkeby, pass in 10(seconds) for `updateInterval` and the address of my 
-    // deployed  MockPriceFeed.sol contract (0xD753A1c190091368EaC67bbF3Ee5bAEd265aC420).
     constructor(uint updateInterval, address _pricefeed) ERC721("Bull&Bear", "BBTK") {
         // Set the keeper update interval
         interval = updateInterval; 
         lastTimeStamp = block.timestamp;  //  seconds since unix epoch
 
-        // set the price feed address to
-        // BTC/USD Price Feed Contract Address on Rinkeby: https://rinkeby.etherscan.io/address/0xECe365B379E1dD183B20fc5f022230C044d51404
-        // or the MockPriceFeed Contract
         pricefeed = AggregatorV3Interface(_pricefeed); // To pass in the mock
 
         // set the price for the chosen currency pair.
         currentPrice = getLatestPrice();
+
     }
 
 

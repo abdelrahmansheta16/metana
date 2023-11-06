@@ -6,7 +6,15 @@ module.exports = {
 		version: "0.8.9",
 		settings: {
 			optimizer: {
-				enabled: true
+				enabled: true,
+				runs: 2000,
+				details: {
+					yul: true,
+					yulDetails: {
+						stackAllocation: true,
+						optimizerSteps: "dhfoDgvulfnTUtnIf"
+					}
+				}
 			}
 		}
 	},
@@ -20,12 +28,16 @@ module.exports = {
 		ETH_GOERLI: {
 			accounts: [`${process.env.PRIVATE_KEY}`],
 			url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`
+		},
+		ETH_SEPOLIA: {
+			accounts: [`${process.env.PRIVATE_KEY}`],
+			url: `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`
 		}
 	},
 	etherscan: {
 		apiKey: `${process.env.ETHERSCAN_API_KEY}`
 	},
 	paths: {
-		artifacts: '../fronted/artifacts'
+		artifacts: '../frontend/artifacts'
 	}
 }

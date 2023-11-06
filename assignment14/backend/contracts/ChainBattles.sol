@@ -2,72 +2,19 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
-import "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
-import "@chainlink/contracts/src/v0.8/shared/access/ConfirmedOwner.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
+import "./ChainlinkRandomness.sol";
 import "hardhat/console.sol";
 
-// import {VRFV2WrapperConsumerBase} from "@chainlink/contracts/src/v0.8/VRFV2WrapperConsumerBase.sol";
-
-//ChainBattles uploaded at 0x6b1842C6786e626eA1cd213ee6000f90F9F77A11
-contract ChainBattles is ERC721URIStorage, VRFConsumerBaseV2, ConfirmedOwner {
-    event RequestSent(uint256 requestId, uint32 numWords);
-    event RequestFulfilled(uint256 requestId, uint256[] randomWords);
-
-    struct RequestStatus {
-        bool fulfilled; // whether the request has been successfully fulfilled
-        bool exists; // whether a requestId exists
-        uint256[] randomWords;
-    }
-    mapping(uint256 => RequestStatus)
-        public s_requests; /* requestId --> requestStatus */
-    VRFCoordinatorV2Interface COORDINATOR;
-
-    // Your subscription ID.
-    uint64 s_subscriptionId;
-
-    // past requests Id.
-    uint256[] public requestIds;
-    uint256 public lastRequestId;
-
-    // The gas lane to use, which specifies the maximum gas price to bump to.
-    // For a list of available gas lanes on each network,
-    // see https://docs.chain.link/docs/vrf/v2/subscription/supported-networks/#configurations
-    bytes32 keyHash =
-        0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c;
-
-    // Depends on the number of requested values that you want sent to the
-    // fulfillRandomWords() function. Storing each word costs about 20,000 gas,
-    // so 100,000 is a safe default for this example contract. Test and adjust
-    // this limit based on the network that you select, the size of the request,
-    // and the processing of the callback request in the fulfillRandomWords()
-    // function.
-    uint32 callbackGasLimit = 100000;
-
-    // The default is 3, but you can set this higher.
-    uint16 requestConfirmations = 3;
-
-    // For this example, retrieve 2 random values in one request.
-    // Cannot exceed VRFCoordinatorV2.MAX_NUM_WORDS.
-    uint32 numWords = 4;
-
-    /**
-     * HARDCODED FOR SEPOLIA
-     * COORDINATOR: 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625
-     */
-    // event RandomNumber(uint number);
-    // event TrackerEvent(Tracker tracker);
-    // address constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
-    // address constant LINK_WRAPPER_ADDRESS =
-    //     0xab18414CD93297B0d12ac29E63Ca20f515b3DB46;
-    uint256 private lastRandomnessRequestId;
+//ChainBattles uploaded at 0x2d1d702AcA729481d0fFD66467EEC93230E74a73
+contract ChainBattles is ERC721, ERC721URIStorage, ERC721Enumerable {
     using Strings for uint256;
     using Counters for Counters.Counter;
+    VRFv2Consumer consumer;
     Counters.Counter private _tokenIds;
 
     struct Tracker {
@@ -80,59 +27,8 @@ contract ChainBattles is ERC721URIStorage, VRFConsumerBaseV2, ConfirmedOwner {
 
     mapping(uint256 => Tracker) public tokenIdToLevels;
 
-    constructor(
-        uint64 subscriptionId
-    )
-        ERC721("Chain Battles", "CBTLS")
-        VRFConsumerBaseV2(0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625)
-        ConfirmedOwner(msg.sender)
-    {
-        COORDINATOR = VRFCoordinatorV2Interface(
-            0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625
-        );
-        s_subscriptionId = subscriptionId;
-    }
-
-    // Assumes the subscription is funded sufficiently.
-    function requestRandomWords() external returns (uint256[] memory) {
-        // Will revert if subscription is not set and funded.
-        uint256 requestId = COORDINATOR.requestRandomWords(
-            keyHash,
-            s_subscriptionId,
-            requestConfirmations,
-            callbackGasLimit,
-            numWords
-        );
-        s_requests[requestId] = RequestStatus({
-            randomWords: new uint256[](0),
-            exists: true,
-            fulfilled: false
-        });
-        requestIds.push(requestId);
-        lastRequestId = requestId;
-        emit RequestSent(requestId, numWords);
-        (bool fulfilled, uint256[] memory randomWords) = getRequestStatus(
-            requestId
-        );
-        return randomWords;
-    }
-
-    function fulfillRandomWords(
-        uint256 _requestId,
-        uint256[] memory _randomWords
-    ) internal override {
-        require(s_requests[_requestId].exists, "request not found");
-        s_requests[_requestId].fulfilled = true;
-        s_requests[_requestId].randomWords = _randomWords;
-        emit RequestFulfilled(_requestId, _randomWords);
-    }
-
-    function getRequestStatus(
-        uint256 _requestId
-    ) public view returns (bool fulfilled, uint256[] memory randomWords) {
-        require(s_requests[_requestId].exists, "request not found");
-        RequestStatus memory request = s_requests[_requestId];
-        return (request.fulfilled, request.randomWords);
+    constructor(address _consumer) ERC721("Chain Battles", "CBTLS") {
+        consumer = VRFv2Consumer(_consumer);
     }
 
     function generateCharacter(
@@ -178,7 +74,9 @@ contract ChainBattles is ERC721URIStorage, VRFConsumerBaseV2, ConfirmedOwner {
         return tracker;
     }
 
-    function getTokenURI(uint256 tokenId) public view returns (string memory) {
+    function tokenURI(
+        uint256 tokenId
+    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
         bytes memory dataURI = abi.encodePacked(
             "{",
             '"name": "Chain Battles #',
@@ -203,7 +101,7 @@ contract ChainBattles is ERC721URIStorage, VRFConsumerBaseV2, ConfirmedOwner {
         _tokenIds.increment();
         uint256 newItemId = _tokenIds.current();
         _safeMint(msg.sender, newItemId);
-        _setTokenURI(newItemId, getTokenURI(newItemId));
+        _setTokenURI(newItemId, tokenURI(newItemId));
     }
 
     function train(uint256 tokenId) public {
@@ -213,14 +111,44 @@ contract ChainBattles is ERC721URIStorage, VRFConsumerBaseV2, ConfirmedOwner {
             "You must own this token to train it"
         );
         uint256 newItemId = _tokenIds.current();
-        uint256[] memory randomNumber = requestRandomWords();
-        tokenIdToLevels[newItemId].hp = randomNumber[0] % 10;
-        tokenIdToLevels[newItemId].levels = randomNumber[1] % 10;
-        tokenIdToLevels[newItemId].speed = randomNumber[2] % 10;
-        tokenIdToLevels[newItemId].strength = randomNumber[3] % 10;
+        uint256 requestId = consumer.requestRandomWords();
+        (bool fulfilled, uint256[] memory randomWords) = consumer
+            .getRequestStatus(requestId);
+        tokenIdToLevels[newItemId].hp = randomWords[0] % 10;
+        tokenIdToLevels[newItemId].levels = randomWords[1] % 10;
+        tokenIdToLevels[newItemId].speed = randomWords[2] % 10;
+        tokenIdToLevels[newItemId].strength = randomWords[3] % 10;
         console.log("tracker levels: %d", tokenIdToLevels[newItemId].levels);
         // emit TrackerEvent(tokenIdToLevels[newItemId]);
-        _setTokenURI(newItemId, getTokenURI(newItemId));
+        _setTokenURI(newItemId, tokenURI(newItemId));
         // lastRandomnessRequestId = requestRandomness(100000, 3, 1);
+    }
+
+    // The following functions are overrides required by Solidity.
+
+    function supportsInterface(
+        bytes4 interfaceId
+    )
+        public
+        view
+        override(ERC721, ERC721URIStorage, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function _burn(
+        uint256 tokenId
+    ) internal override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 firstTokenId,
+        uint256 batchSize
+    ) internal override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
     }
 }

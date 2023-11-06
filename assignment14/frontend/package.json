@@ -9,10 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "connectkit": "^1.4.0",
+    "axios": "^1.6.0",
+    "connectkit": "^1.5.3",
     "encoding": "^0.1.13",
     "eslint": "8.42.0",
     "eslint-config-next": "13.4.4",
+    "ethers": "^5.7.2",
+    "flowbite-react": "^0.5.0",
     "fs": "^0.0.1-security",
     "lokijs": "^1.5.12",
     "next": "13.4.4",
@@ -20,10 +23,13 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "tls": "^0.0.1",
-    "viem": "^0.3.50",
+    "viem": "^1.16.6",
     "wagmi": "^1.0.9"
   },
   "devDependencies": {
-    "@types/react": "18.2.14"
+    "@types/react": "18.2.14",
+    "tailwindcss": "^3.3.3",
+    "autoprefixer": "^10.4.15"
+
   }
 }

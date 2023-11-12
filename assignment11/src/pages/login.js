@@ -16,21 +16,18 @@ const RecoveryPage = () => {
         try {
             // Derive the private key
             const privateKey = mnemonicToEntropy(mnemonic,wordlist);
-            console.log(Buffer.from(privateKey).toString('hex'));
             // Derive the public key from the private key
             const publicKey = secp256k1.publicKeyCreate(privateKey, false);
 
             // Calculate the Ethereum address from the public key
             const addressBuffer = publicToAddress(Buffer.from(publicKey), true); // true for RLP encoding
             const address = toChecksumAddress('0x' + addressBuffer.toString('hex'));
-            console.log(address)
             const user = {
                 privateKey: Buffer.from(privateKey).toString('hex'),
                 publicKey:Buffer.from(publicKey).toString('hex'),
                 address,
                 mnemonic
             };
-            console.log(user)
             localStorage.setItem('user', JSON.stringify(user));
             router.push('/');
         } catch (err) {

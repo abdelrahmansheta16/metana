@@ -1,7 +1,9 @@
-import { fundAccount, getBalance, getTokenBalances, getTokenBalance, sendERC1155Tokens, sendERC20Tokens, sendERC721Tokens, getERC1155TokenBalances } from '@/utils/functions';
+import { fundAccount, getBalance, getTokenBalances, sendERC1155Tokens, sendERC20Tokens, sendERC721Tokens, getERC1155TokenBalances } from '@/utils/functions';
 import axios from 'axios';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
+import * as ethers from 'ethers';
+
 
 const Home = () => {
   const router = useRouter();
@@ -33,7 +35,6 @@ const Home = () => {
     // Simulated account data and activities (replace with actual data)
     const user = JSON.parse(localStorage.getItem('user'));
     setUser(user);
-    console.log(user)
     if (user) {
       setIsNew(false)
     } else {
@@ -42,14 +43,12 @@ const Home = () => {
     }
 
     const getBalanceInit = async () => {
-      let balance = await getBalance(user.address);
+      let balance = await getBalance(user.address,selectedNetwork);
       balance = balance.toString() + 'ETH';
-      console.log(user)
       setAccountData({ address: user.address, balance })
     }
 
     const getContractsArray = (array) => {
-      console.log(array)
       // Use a Set to store unique names
       const uniqueContracts = new Set();
 
@@ -57,28 +56,18 @@ const Home = () => {
       array.forEach((obj) => {
         uniqueContracts.add(obj.contractAddress);
       });
-      console.log(uniqueContracts)
       // Convert the Set back to an array (if needed)
       const uniqueContractsArray = [...uniqueContracts];
-      console.log(uniqueContractsArray)
       return uniqueContractsArray;
     }
 
     const getTokensInit = async () => {
       const erc1155TokenAddresses = JSON.parse(localStorage.getItem('erc1155TokenAddresses')) || [];
       const tokenAddresses = JSON.parse(localStorage.getItem('tokenAddresses')) || [];
-      // const erc1155Balances = await getTokenBalance(user.address,erc1155TokenAddresses);
-      // console.log(tokens)
-      const tokenBalances = await getTokenBalances(user.address, tokenAddresses);
+      const tokenBalances = await getTokenBalances(user.address, tokenAddresses,selectedNetwork);
       setTokenBalances(tokenBalances);
       const erc1155TokenBalances = await getERC1155TokenBalances(user.address, erc1155TokenAddresses);
       setERC1155TokenBalances(erc1155TokenBalances);
-      // const erc721 = nfts.erc721Token;
-      // const erc1155 = nfts.erc1155Token;
-      // setErc721TokenBalance(erc721);
-      // setErc20ContractAddresses(getContractsArray(tokens));
-      // setErc721ContractAddresses(getContractsArray(erc721));
-      // setErc1155ContractAddresses(getContractsArray(erc1155));
     }
     if (user) {
       getBalanceInit();
@@ -96,27 +85,26 @@ const Home = () => {
 
   const handleSendEthers = async (amount, recipient) => {
     // Call a function to send ERC-20 tokens
-    await fundAccount(user.address, user.privateKey, amount, recipient);
+    await fundAccount(user.address, user.privateKey, amount, recipient,selectedNetwork);
   };
 
   const handleSendERC20 = async (amount, recipient) => {
     // Call a function to send ERC-20 tokens
-    await sendERC20Tokens(user.address, user.privateKey, selectedERC20Contract, recipient, amount);
+    await sendERC20Tokens(user.address, user.privateKey, selectedERC20Contract, recipient, amount, selectedNetwork);
   };
 
   const handleSendERC721 = async (tokenId, recipient) => {
     // Call a function to send ERC-721 tokens
-    await sendERC721Tokens(user.address, user.privateKey, selectedERC721Contract, recipient, tokenId);
+    await sendERC721Tokens(user.address, user.privateKey, selectedERC721Contract, recipient, tokenId, selectedNetwork);
   };
 
   const handleSendERC1155 = async (tokenId, amount, recipient) => {
     // Call a function to send ERC-1155 tokens
-    await sendERC1155Tokens(user.address, user.privateKey, selectedERC1155Contract, recipient, tokenId, amount);
+    await sendERC1155Tokens(user.address, user.privateKey, selectedERC1155Contract, recipient, tokenId, amount, selectedNetwork);
   };
 
   const handleAddTokenAddress = (e) => {
     e.preventDefault();
-    console.log(e.target.newTokenContractAddress);
     const newTokenAddress = e.target.newTokenContractAddress.value;
     const tokenName = e.target.newTokenName.value;
 
@@ -155,7 +143,6 @@ const Home = () => {
 
   const handleAddERC1155TokenAddress = (e) => {
     e.preventDefault();
-    console.log(e.target.newTokenContractAddress);
     const newTokenAddress = e.target.newTokenContractAddress.value;
     const tokenName = e.target.newTokenName.value;
     const tokenID = e.target.newTokenID.value;
@@ -212,7 +199,7 @@ const Home = () => {
                 onChange={handleNetworkChange}
                 className="bg-white text-blue-500 border border-blue-500 rounded-md px-3 py-1"
               >
-                <option value="mainnet">Ethereum</option>
+                <option value="goerli">Goerli</option>
                 <option value="sepolia">Sepolia</option>
                 {/* Add more network options here */}
               </select>

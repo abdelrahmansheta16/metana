@@ -4,38 +4,15 @@ import crypto from 'crypto';
 const fse = require('fs-extra');
 import createAccount from '@/utils/functions';
 
-export async function getStaticProps() {
-    try {
-        // Read the contents of the text file
-        const data = await fse.readFile('./src/utils/wordlist.txt', 'utf8')
-        console.log(data)
-        const wordList = data.split(/\s+|\n/).filter(word => word.trim() !== "");
-        return {
-            props: {
-                content: wordList,
-            },
-        };
-    } catch (error) {
-        console.log(error)
-        console.error('Error reading the file:', error);
-        return {
-            props: {
-                content: 'Error reading the file',
-            },
-        };
-    }
-}
 
-const KeyManagement = ({content}) => {
+const KeyManagement = () => {
     const router = useRouter();
     const [newAccountName, setNewAccountName] = useState('');
     const [generatedKeyPair, setGeneratedKeyPair] = useState(null);
 
     const generateKeyPair = async () => {
         // Replace this with actual logic to generate key pairs securely
-        const user = await createAccount(content);
-        console.log(user);
-        const privateKeyHash = crypto.createHash('sha256').update(user.privateKey.toString('hex')).digest('hex');
+        const user = await createAccount();
         localStorage.setItem('user', JSON.stringify(user));
         setGeneratedKeyPair(user);
     };

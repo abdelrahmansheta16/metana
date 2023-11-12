@@ -11,8 +11,6 @@ const SendReceive = () => {
     const handleSend = async () => {
         // Implement the logic to send cryptocurrency
         const user = JSON.parse(localStorage.getItem('user'));
-        console.log(user.address)
-        console.log(sendAddress)
         if (user) {
             await fundAccount(user.address,user.privateKey,parseInt(sendAmount),sendAddress)
         }

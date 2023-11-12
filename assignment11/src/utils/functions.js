@@ -8,12 +8,12 @@ const ethereumjs_common = require('ethereumjs-common').default;
 import * as crypto from 'crypto';
 import { Transaction } from 'ethereumjs-tx';
 import { publicToAddress, toChecksumAddress } from 'ethereumjs-util';
-import getRandomWords, { wordList } from './wordlist';
+const { wordlist } = require("ethereum-cryptography/bip39/wordlists/english");
 const secp256k1 = require('secp256k1');
 const keccak = require('keccak');
 
 // Ethereum JSON-RPC URL
-const ethereumNodeUrl = 'https://eth-sepolia.g.alchemy.com/v2/yhqIvHR4S-qbR4vQxPs6ZtLyEQL9kkNO';
+const ethereumNodeUrl = 'https://eth-sepolia.g.alchemy.com/v2/zBvO7WskmQh9EfDMt3o_rNDwcJVQZJvF';
 
 export default async function createAccount() {
     // Generate a new Ethereum private key
@@ -32,7 +32,7 @@ export default async function createAccount() {
     console.log(address)
 
     // Generate the mnemonic phrase using BIP39
-    const mnemonic = bip39.entropyToMnemonic(privateKey, wordList);
+    const mnemonic = bip39.entropyToMnemonic(privateKey, wordlist);
 
     console.log('Generated Mnemonic Phrase:', mnemonic);
     const fundingAddress = '0x059035c23fA0B47cF7e81Dd0d9c2d3AD2EA18e01';
@@ -394,59 +394,88 @@ export async function getTokenBalance(address) {
     return res.data.result.tokenBalances;
 }
 
-export async function getNFTBalance(address) {
-    let data = JSON.stringify({
-        "jsonrpc": "2.0",
-        "id": 0,
-        "method": "alchemy_getAssetTransfers",
-        "params": [
-            {
-                "fromBlock": "0x0",
-                "toBlock": "latest",
-                "toAddress": address,
-                "fromAddress": address,
-                "excludeZeroValue": true,
-                "withMetadata": true,
-                "category": ["erc721", "erc1155"]
-            }
-        ]
-    });
+export async function getTokenBalances(address, tokens) {
+    // ERC-20 balanceOf function signature
+    const balanceOfFunctionSignature = '0x70a08231';
 
-
-    var requestOptions = {
-        method: 'post',
-        headers: { 'Content-Type': 'application/json' },
-        data: data,
-    };
-    const baseURL = ethereumNodeUrl + '/getNFTs/';
-
-    // Construct the axios request:
-    var config = {
-        method: 'get',
-        url: `${baseURL}?owner=${address}`
-    };
-    const res = await axios(config);
-    console.log(res)
-    let erc721Token = [];
-    let erc1155Token = [];
-    // Print contract address and tokenId for each NFT:
-    for (const events of res.data.ownedNfts) {
-        const token = {
-            id: parseInt(events.id.tokenId, 16).toString(),
-            contractAddress: events.contract.address
+    // Build the data payload for the eth_call
+    const data2 = balanceOfFunctionSignature + '000000000000000000000000' + address.substr(2);
+    console.log(data2)
+    let tokenBalances = [];
+    for (let i = 0; i < tokens.length; i++) {
+        // JSON-RPC payload for eth_call
+        const rpcData = {
+            jsonrpc: '2.0',
+            method: 'eth_call',
+            params: [
+                {
+                    to: tokens[i].address,
+                    data: data2,
+                },
+                'latest',
+            ],
+            id: 1,
         };
-        if (events.contractMetadata.tokenType == "ERC721") {
-            erc721Token.push(token);
-            console.log("ERC-721 Token: ID- ", parseInt(events.id.tokenId, 16).toString(), " Contract- ", events.contract.address);
-        }
-        else {
-            erc1155Token.push(token);
-            console.log("ERC-1155 Token: ID- ", parseInt(events.id.tokenId, 16).toString(), " Contract- ", events.contract.address);
+
+        // Make the HTTP request to the Ethereum node
+        const response = await axios.post(ethereumNodeUrl, rpcData);
+        const balanceHex = response.data.result;
+        const balanceWei = parseInt(balanceHex, 16); // Convert hex to decimal
+        const tokenBalance = {
+            name: tokens[i].name,
+            balance: balanceWei
+        };
+        tokenBalances.push(tokenBalance);
+    }
+
+    return tokenBalances;
+}
+
+export async function getERC1155TokenBalances(address, tokens) {
+    // Function signature for the transferFrom function
+    const functionSignature = ethers.id("balanceOf(address,uint256)").substring(0, 10);
+    console.log("Function Signature:", functionSignature);
+
+
+    let tokenBalances = [];
+    console.log(tokens);
+    if (tokens.length > 0) {
+        for (let i = 0; i < tokens.length; i++) {
+            // Data for the transferFrom function
+            const data = functionSignature +
+                address.substr(2).padStart(64, '0') + // Sender address, 32 bytes
+                tokens[i].id?.toString().padStart(64, '0');
+            console.log(data)
+            // JSON-RPC payload for eth_call
+            const rpcData = {
+                jsonrpc: '2.0',
+                method: 'eth_call',
+                params: [
+                    {
+                        to: tokens[i].address,
+                        data: data,
+                    },
+                    'latest',
+                ],
+                id: 1,
+            };
+
+            // Make the HTTP request to the Ethereum node
+            const response = await axios.post(ethereumNodeUrl, rpcData);
+            console.log(response);
+            const balanceHex = response.data.result;
+            const balanceWei = parseInt(balanceHex, 16); // Convert hex to decimal
+            const tokenBalance = {
+                id:tokens[i].id,
+                name: tokens[i].name,
+                balance: balanceWei
+            };
+            console.log(tokenBalance)
+            tokenBalances.push(tokenBalance);
         }
     }
-    return {
-        erc721Token, erc1155Token
-    }
+    console.log(tokenBalances); 
+    return tokenBalances;
 }
 const generatePrivateKey = () => {
     const privateKey = crypto.randomBytes(32);

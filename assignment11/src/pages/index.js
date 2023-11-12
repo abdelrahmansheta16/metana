@@ -1,4 +1,4 @@
-import { fundAccount, getBalance, getNFTBalance, getTokenBalance, sendERC1155Tokens, sendERC20Tokens, sendERC721Tokens } from '@/utils/functions';
+import { fundAccount, getBalance, getTokenBalances, getTokenBalance, sendERC1155Tokens, sendERC20Tokens, sendERC721Tokens, getERC1155TokenBalances } from '@/utils/functions';
 import axios from 'axios';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
@@ -6,11 +6,13 @@ import React, { useState, useEffect } from 'react';
 const Home = () => {
   const router = useRouter();
   const [selectedNetwork, setSelectedNetwork] = useState('Ethereum');
+  const [rerenderFlag, setRerenderFlag] = useState(false);
   const [user, setUser] = useState({});
   const [selectedAccount, setSelectedAccount] = useState('');
+  const [tokenBalances, setTokenBalances] = useState([]);
   const [erc20TokenBalance, setErc20TokenBalance] = useState('');
   const [erc721TokenBalance, setErc721TokenBalance] = useState('');
-  const [erc1155TokenBalance, setErc1155TokenBalance] = useState('');
+  const [erc1155TokenBalances, setERC1155TokenBalances] = useState([]);
   const [activities, setActivities] = useState([]);
   const [isNew, setIsNew] = useState(true);
   const [accountData, setAccountData] = useState({
@@ -63,24 +65,26 @@ const Home = () => {
     }
 
     const getTokensInit = async () => {
-      const tokens = await getTokenBalance(user.address);
-      console.log(tokens)
-      const nfts = await getNFTBalance(user.address);
-      console.log(nfts)
-      const erc721 = nfts.erc721Token;
-      const erc1155 = nfts.erc1155Token;
-      setErc721TokenBalance(erc721);
-      setErc1155TokenBalance(erc1155);
-      setErc20TokenBalance(tokens);
-      setErc20ContractAddresses(getContractsArray(tokens));
-      setErc721ContractAddresses(getContractsArray(erc721));
-      setErc1155ContractAddresses(getContractsArray(erc1155));
+      const erc1155TokenAddresses = JSON.parse(localStorage.getItem('erc1155TokenAddresses')) || [];
+      const tokenAddresses = JSON.parse(localStorage.getItem('tokenAddresses')) || [];
+      // const erc1155Balances = await getTokenBalance(user.address,erc1155TokenAddresses);
+      // console.log(tokens)
+      const tokenBalances = await getTokenBalances(user.address, tokenAddresses);
+      setTokenBalances(tokenBalances);
+      const erc1155TokenBalances = await getERC1155TokenBalances(user.address, erc1155TokenAddresses);
+      setERC1155TokenBalances(erc1155TokenBalances);
+      // const erc721 = nfts.erc721Token;
+      // const erc1155 = nfts.erc1155Token;
+      // setErc721TokenBalance(erc721);
+      // setErc20ContractAddresses(getContractsArray(tokens));
+      // setErc721ContractAddresses(getContractsArray(erc721));
+      // setErc1155ContractAddresses(getContractsArray(erc1155));
     }
     if (user) {
       getBalanceInit();
       getTokensInit();
     }
-  }, []);
+  }, [rerenderFlag]);
 
   const handleNetworkChange = (event) => {
     setSelectedNetwork(event.target.value);
@@ -92,7 +96,7 @@ const Home = () => {
 
   const handleSendEthers = async (amount, recipient) => {
     // Call a function to send ERC-20 tokens
-    await fundAccount(user.address, user.privateKey,amount, recipient);
+    await fundAccount(user.address, user.privateKey, amount, recipient);
   };
 
   const handleSendERC20 = async (amount, recipient) => {
@@ -108,6 +112,92 @@ const Home = () => {
   const handleSendERC1155 = async (tokenId, amount, recipient) => {
     // Call a function to send ERC-1155 tokens
     await sendERC1155Tokens(user.address, user.privateKey, selectedERC1155Contract, recipient, tokenId, amount);
+  };
+
+  const handleAddTokenAddress = (e) => {
+    e.preventDefault();
+    console.log(e.target.newTokenContractAddress);
+    const newTokenAddress = e.target.newTokenContractAddress.value;
+    const tokenName = e.target.newTokenName.value;
+
+    // Validate the input (add your validation logic here)
+    if (!newTokenAddress || !tokenName) {
+      // Handle validation error
+      console.error('Invalid input. Please provide a token address and select a token standard.');
+      return;
+    }
+
+    // Get existing token addresses from local storage
+    const existingTokenAddresses = JSON.parse(localStorage.getItem('tokenAddresses')) || [];
+
+    const contractAddress = JSON.parse(localStorage.getItem('contractAddresses')) || [];
+
+    // Check if the token address already exists for the given token standard
+    if (
+      existingTokenAddresses[tokenName.toLowerCase()] ||
+      contractAddress.includes(newTokenAddress)
+    ) {
+      // Handle case where the token address already exists
+      console.error('Token address already exists for the selected token standard.');
+      return;
+    }
+    existingTokenAddresses.push({ name: tokenName, address: newTokenAddress });
+    contractAddress.push(newTokenAddress);
+
+    // Update local storage with the new token addresses
+    localStorage.setItem('tokenAddresses', JSON.stringify(existingTokenAddresses));
+    localStorage.setItem('contractAddresses', JSON.stringify(contractAddress));
+
+    // Clear the form
+    e.target.reset();
+    setRerenderFlag(true);
+  };
+
+  const handleAddERC1155TokenAddress = (e) => {
+    e.preventDefault();
+    console.log(e.target.newTokenContractAddress);
+    const newTokenAddress = e.target.newTokenContractAddress.value;
+    const tokenName = e.target.newTokenName.value;
+    const tokenID = e.target.newTokenID.value;
+
+    // Validate the input (add your validation logic here)
+    if (!newTokenAddress || !tokenName) {
+      // Handle validation error
+      console.error('Invalid input. Please provide a token address and select a token standard.');
+      return;
+    }
+
+    // Get existing token addresses from local storage
+    const existingTokenAddresses = JSON.parse(localStorage.getItem('erc1155TokenAddresses')) || [];
+
+    const contractAddress = JSON.parse(localStorage.getItem('erc1155ContractAddresses')) || [];
+
+    // Check if the token address already exists for the given token standard
+    if (
+      existingTokenAddresses[tokenName.toLowerCase()] ||
+      contractAddress.includes(newTokenAddress)
+    ) {
+      // Handle case where the token address already exists
+      console.error('Token address already exists for the selected token standard.');
+      return;
+    }
+    existingTokenAddresses.push({
+      id: tokenID,
+      name: tokenName,
+      address: newTokenAddress
+    });
+    contractAddress.push({
+      id: tokenID,
+      address: newTokenAddress
+    });
+
+    // Update local storage with the new token addresses
+    localStorage.setItem('erc1155TokenAddresses', JSON.stringify(existingTokenAddresses));
+    localStorage.setItem('erc1155ContractAddresses', JSON.stringify(contractAddress));
+
+    // Clear the form
+    e.target.reset();
+    setRerenderFlag(true);
   };
 
   return (
@@ -147,17 +237,84 @@ const Home = () => {
                 <p className="text-xl font-semibold">Account Details</p>
                 <p>Address: {accountData.address}</p>
                 <p>Balance: {accountData.balance}</p>
-                {/* Display ERC-20 token balance */}
-                <p>ERC-20 Token Balance: {erc20TokenBalance.length} Tokens</p>
-                {/* Display ERC-721 token balance */}
-                <p>ERC-721 Token Balance: {erc721TokenBalance.length} Tokens</p>
-                {/* Display ERC-1155 token balance */}
-                <p>ERC-1155 Token Balance: {erc1155TokenBalance.length} Tokens</p>
+                {tokenBalances.map((token) => {
+                  return (<p>{token.name} Token Balance: {token.balance} Tokens</p>)
+                })}
+                {erc1155TokenBalances.map((token) => {
+                  return (<p>{token.name} Token Balance: {token.balance} Tokens</p>)
+                })}
               </div>
 
               {/* Action Forms */}
               <div>
                 <p className="text-xl font-semibold">Action Forms</p>
+                {/* Form to Add Token Address */}
+                <form onSubmit={(e) => handleAddTokenAddress(e)}>
+                  <div className="mb-4">
+                    <label htmlFor="newTokenContractAddress" className="block font-medium">
+                      Add Token Address
+                    </label>
+                    <input
+                      type="text"
+                      name="newTokenContractAddress"
+                      id="newTokenContractAddress"
+                      className="border rounded-md px-3 py-1"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label htmlFor="newTokenName" className="block font-medium">
+                      Add Token Name
+                    </label>
+                    <input
+                      type="text"
+                      name="newTokenName"
+                      id="newTokenName"
+                      className="border rounded-md px-3 py-1"
+                    />
+                  </div>
+                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-md">
+                    Add Token Address
+                  </button>
+                </form>
+                {/* Form to Add ERC1155 Token Address */}
+                <form onSubmit={(e) => handleAddERC1155TokenAddress(e)}>
+                  <div className="mb-4">
+                    <label htmlFor="newTokenContractAddress" className="block font-medium">
+                      Add ERC1155 Token Address
+                    </label>
+                    <input
+                      type="text"
+                      name="newTokenContractAddress"
+                      id="newTokenContractAddress"
+                      className="border rounded-md px-3 py-1"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label htmlFor="newTokenContractAddress" className="block font-medium">
+                      Add Token ID
+                    </label>
+                    <input
+                      type="text"
+                      name="newTokenID"
+                      id="newTokenID"
+                      className="border rounded-md px-3 py-1"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label htmlFor="newTokenName" className="block font-medium">
+                      Add Token Name
+                    </label>
+                    <input
+                      type="text"
+                      name="newTokenName"
+                      id="newTokenName"
+                      className="border rounded-md px-3 py-1"
+                    />
+                  </div>
+                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-md">
+                    Add Token Address
+                  </button>
+                </form>
                 {/* Form to Send ERC-20 Tokens */}
                 <form
                   onSubmit={(e) => {

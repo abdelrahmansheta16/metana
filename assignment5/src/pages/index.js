@@ -45,7 +45,6 @@ const AllCharts = () => {
             };
 
             const transferEvents = await alchemy.core.getLogs(filter);
-            console.log(transferEvents);
 
             const transferVolumeData = [];
             const blockNumbers = [];
@@ -53,15 +52,10 @@ const AllCharts = () => {
             for (let blockNumber = startBlockNumber; blockNumber <= latestBlockNumber; blockNumber++) {
                 let transferVolume = 0;
                 for (const event of transferEvents) {
-                    console.log(event)
-                    const parsedLog = contract.interface.parseLog(event);
-                    console.log(parsedLog)
                     if (event.blockNumber == blockNumber) {
-                        console.log("hello")
-                        transferVolume += Number(parsedLog.values._value.toString());
+                        transferVolume++;
                     }
                 }
-
                 transferVolumeData.push(transferVolume);
                 blockNumbers.push(blockNumber);
             }
@@ -84,8 +78,6 @@ const AllCharts = () => {
                 basefeeData.push(basefee.toString());
                 blockNumbers.push(blockNumber.toString());
             }
-            console.log(basefeeData)
-            console.log(blockNumbers)
             setBasefeeData(basefeeData);
             setBasefeeBlockNumbers(blockNumbers);
         }

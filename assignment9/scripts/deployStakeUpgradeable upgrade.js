@@ -7,7 +7,7 @@ async function main() {
   const stakingContract = await upgrades.deployProxy(StakingContract, [42], {
     initializer: "initialize",
   });
-  await stakingContract.deployed();
+  await stakingContract.waitForDeployment();
   console.log("StakingContract deployed to:", stakingContract.address);
 }
 

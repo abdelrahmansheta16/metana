@@ -35,18 +35,24 @@ interface MyToken {
     function mint(address to, uint256 amount) external;
 }
 
+//StakingContract deployed to: 0xA36c2a9500F03394548ad62Ecf844fb98E5d084E
 contract StakingContract {
     MyNFT nftContract;
     MyToken tokenContract;
     address private nftsHolder;
-    uint256 public stakingDuration = 1 days;
-    uint256 public rewardAmount = 10 * 10 ** 18; // 10 tokens with 18 decimals
+    uint256 public stakingDuration;
+    uint256 public rewardAmount; // 10 tokens with 18 decimals
 
     mapping(address => uint256) public stakingTimestamp;
     mapping(uint256 => bool) public isDeposited;
     mapping(uint256 => address) public originalOwner;
 
-    function initialize(address _stakingNFTAddress, address _erc20TokenAddress) external {
+    function initialize(
+        address _stakingNFTAddress,
+        address _erc20TokenAddress
+    ) external {
+        stakingDuration = 1 days;
+        rewardAmount = 10 * 10 ** 18;
         nftContract = MyNFT(_stakingNFTAddress);
         tokenContract = MyToken(_erc20TokenAddress);
         nftsHolder = msg.sender;

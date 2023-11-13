@@ -7,8 +7,8 @@ async function main() {
   const myTokenUpgradeable = await upgrades.deployProxy(MyTokenUpgradeable, [], {
     initializer: "initialize",
   });
-  await myTokenUpgradeable.deployed();
-  console.log("MyTokenUpgradeable deployed to:", myTokenUpgradeable.address);
+  await myTokenUpgradeable.waitForDeployment();
+  console.log("MyTokenUpgradeable deployed to:", await myTokenUpgradeable.getAddress());
 }
 
 main();

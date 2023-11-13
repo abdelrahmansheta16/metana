@@ -7,8 +7,8 @@ async function main() {
   const contract = await upgrades.deployProxy(Contract, [], {
     initializer: "initialize",
   });
-  await contract.deployed();
-  console.log("MyNFTUpgradeable deployed to:", box.address);
+  await contract.waitForDeployment();
+  console.log("MyNFTUpgradeable deployed to:", await contract.getAddress());
 }
 
 main();

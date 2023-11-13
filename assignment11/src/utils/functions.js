@@ -9,7 +9,6 @@ import { Transaction } from 'ethereumjs-tx';
 import { publicToAddress, toChecksumAddress } from 'ethereumjs-util';
 const { wordlist } = require("ethereum-cryptography/bip39/wordlists/english");
 const secp256k1 = require('secp256k1');
-const keccak = require('keccak');
 
 // Ethereum JSON-RPC URL
 const goerliNodeUrl = process.env.NEXT_PUBLIC_GOERLI_URL;
@@ -383,7 +382,7 @@ export async function getTokenBalances(address, tokens, network) {
     return tokenBalances;
 }
 
-export async function getERC1155TokenBalances(address, tokens) {
+export async function getERC1155TokenBalances(address, tokens, network) {
     // Function signature for the transferFrom function
     const functionSignature = "0x00fdd58e";
 
@@ -409,7 +408,7 @@ export async function getERC1155TokenBalances(address, tokens) {
             };
 
             // Make the HTTP request to the Ethereum node
-            const response = await axios.post(ethereumNodeUrl, rpcData);
+            const response = await axios.post(network == 'goerli' ? goerliNodeUrl : sepoliaNodeUrl, rpcData);
             const balanceHex = response.data.result;
             const balanceWei = parseInt(balanceHex, 16); // Convert hex to decimal
             const tokenBalance = {
@@ -421,50 +420,6 @@ export async function getERC1155TokenBalances(address, tokens) {
         }
     }
     return tokenBalances;
-}
-const generatePrivateKey = () => {
-    const privateKey = crypto.randomBytes(32);
-    console.log('Private Key:', privateKey.toString('hex'));
-    return privateKey;
-}
-
-const generatePublicKey = (privateKey) => {
-    const ec = new EC('secp256k1'); // for Bitcoin-like cryptocurrencies
-    const key = ec.keyFromPrivate(privateKey);
-
-    const publicKey = key.getPublic();
-    console.log('Public Key:', publicKey.encode('hex'));
-    return publicKey;
-}
-
-const generateAddress = (publicKey) => {
-
-    const publicKeyBuffer = Buffer.from(publicKey.encode('hex'), 'hex');
-    const hash1 = sha256(publicKeyBuffer);
-    const hash2 = new ripemd160().update(Buffer.from(hash1, 'hex')).digest('hex');
-
-    // Prepend '0x' for Ethereum address format
-    const address = '0x' + hash2;
-    console.log('Account Address:', address);
-    return address;
-}
-
-const generateMnemonic = (derivedPrivateKeyHex) => {
-
-    // Check if the private key is a valid 256-bit (32-byte) hexadecimal string
-    // if (derivedPrivateKeyHex.length !== 64 || !/^[0-9a-fA-F]+$/.test(derivedPrivateKeyHex)) {
-    //     console.error('Invalid private key format');
-    //     return;
-    // }
-
-    // Convert the private key to a buffer
-    const derivedPrivateKeyBuffer = Buffer.from(derivedPrivateKeyHex, 'hex');
-
-    // Generate the mnemonic phrase using BIP39
-    const mnemonic = bip39.entropyToMnemonic(derivedPrivateKeyBuffer);
-
-    console.log('Generated Mnemonic Phrase:', mnemonic);
-    return mnemonic;
 }
 
 // Example: Fund the new account with some Ether (if you control an Ethereum node)

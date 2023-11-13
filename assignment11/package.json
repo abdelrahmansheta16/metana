@@ -11,6 +11,7 @@
   "dependencies": {
     "axios": "^1.5.1",
     "bip39": "^3.1.0",
+    "dotenv": "^16.3.1",
     "elliptic": "^6.5.4",
     "ethereum-cryptography": "^1.2.0",
     "ethereumjs-common": "^1.5.2",

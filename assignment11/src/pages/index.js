@@ -43,7 +43,7 @@ const Home = () => {
     }
 
     const getBalanceInit = async () => {
-      let balance = await getBalance(user.address,selectedNetwork);
+      let balance = await getBalance(user.address, selectedNetwork);
       balance = balance.toString() + 'ETH';
       setAccountData({ address: user.address, balance })
     }
@@ -64,9 +64,9 @@ const Home = () => {
     const getTokensInit = async () => {
       const erc1155TokenAddresses = JSON.parse(localStorage.getItem('erc1155TokenAddresses')) || [];
       const tokenAddresses = JSON.parse(localStorage.getItem('tokenAddresses')) || [];
-      const tokenBalances = await getTokenBalances(user.address, tokenAddresses,selectedNetwork);
+      const tokenBalances = await getTokenBalances(user.address, tokenAddresses, selectedNetwork);
       setTokenBalances(tokenBalances);
-      const erc1155TokenBalances = await getERC1155TokenBalances(user.address, erc1155TokenAddresses);
+      const erc1155TokenBalances = await getERC1155TokenBalances(user.address, erc1155TokenAddresses, selectedNetwork);
       setERC1155TokenBalances(erc1155TokenBalances);
     }
     if (user) {
@@ -85,7 +85,7 @@ const Home = () => {
 
   const handleSendEthers = async (amount, recipient) => {
     // Call a function to send ERC-20 tokens
-    await fundAccount(user.address, user.privateKey, amount, recipient,selectedNetwork);
+    await fundAccount(user.address, user.privateKey, amount, recipient, selectedNetwork);
   };
 
   const handleSendERC20 = async (amount, recipient) => {
@@ -224,11 +224,11 @@ const Home = () => {
                 <p className="text-xl font-semibold">Account Details</p>
                 <p>Address: {accountData.address}</p>
                 <p>Balance: {accountData.balance}</p>
-                {tokenBalances.map((token) => {
-                  return (<p>{token.name} Token Balance: {token.balance} Tokens</p>)
+                {tokenBalances.map((token,index) => {
+                  return (<p key={index}>{token.name} Token Balance: {token.balance} Tokens</p>)
                 })}
-                {erc1155TokenBalances.map((token) => {
-                  return (<p>{token.name} Token Balance: {token.balance} Tokens</p>)
+                {erc1155TokenBalances.map((token,index) => {
+                  return (<p key={index}>{token.name} Token Balance: {token.balance} Tokens</p>)
                 })}
               </div>
 

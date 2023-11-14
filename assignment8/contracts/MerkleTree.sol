@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import {BitMaps} from "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
+import "hardhat/console.sol";
+
 contract AirDropToken is ERC721, ERC721Burnable, Ownable {
     enum Stages {
         PreMinting,
@@ -24,9 +26,9 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
     mapping(address => uint) public memberIndex;
     mapping(address => uint256) public creationBlock;
     address[] public mintedTokens;
-    uint256 public revealBlockNumber;
+    mapping(address => uint256) public revealBlockNumber;
     uint256 public numOfWhiteListMembers;
-    uint private totalSupply;
+    uint public totalSupply;
     bool public revealed;
     mapping(address => bytes32) public commitment;
     mapping(address => uint256) public nftAllocations;
@@ -35,13 +37,16 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
     event AllocationRevealed(address recipient, uint256 nftID);
 
     modifier onlyBeforeReveal() {
-        require(block.number < revealBlockNumber, "Reveal period has ended.");
+        require(
+            block.number < revealBlockNumber[msg.sender],
+            "Reveal period has ended."
+        );
         _;
     }
 
     modifier onlyAfterReveal() {
         require(
-            block.number >= revealBlockNumber,
+            block.number >= revealBlockNumber[msg.sender],
             "Reveal period has not started yet."
         );
         _;
@@ -68,12 +73,10 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
 
     constructor(
         bytes32 _merkleRoot,
-        address initialOwner,
         uint _totalSupply,
         address[] memory whitelist
-    ) ERC721("AirDropToken", "ADT") Ownable(initialOwner) {
+    ) ERC721("AirDropToken", "ADT") Ownable(msg.sender) {
         setWhiteList(whitelist);
-        revealBlockNumber = block.number + 10; // Reveal 10 blocks later
         revealed = false;
         totalSupply = _totalSupply;
         merkleRoot = _merkleRoot;
@@ -106,6 +109,8 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
         bytes32[] calldata proof
     ) external timedTransitions atStage(Stages.PreMinting) {
         uint index = memberIndex[msg.sender];
+        console.log("0 %d", index);
+
         // check if already claimed
         require(
             !BitMaps.get(whitelistClaimed, index),
@@ -117,39 +122,33 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
             "Invalid Merkle Proof."
         );
         BitMaps.setTo(whitelistClaimed, index, true);
-        mintedTokens[index] = msg.sender;
+        mintedTokens.push(msg.sender);
+        revealBlockNumber[msg.sender] = block.number + 10;
+        submitCommitment(keccak256(abi.encodePacked(index)));
         _safeMint(msg.sender, index);
     }
 
-    function normalMint(
-        bytes32[] calldata proof
-    ) external timedTransitions atStage(Stages.PostMinting) {
+    function normalMint()
+        external
+        timedTransitions
+        atStage(Stages.PostMinting)
+    {
         uint index = memberIndex[msg.sender];
         // check if already claimed
-        require(
-            !BitMaps.get(whitelistClaimed, index),
-            "Address already claimed"
-        );
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        require(
-            MerkleProof.verify(proof, merkleRoot, leaf),
-            "Invalid Merkle Proof."
-        );
-        BitMaps.setTo(whitelistClaimed, index, true);
         mintedTokens[index] = msg.sender;
+        revealBlockNumber[msg.sender] = block.number + 10;
+        submitCommitment(keccak256(abi.encodePacked(index)));
         _safeMint(msg.sender, index);
     }
 
     function submitCommitment(
         bytes32 _commitment
-    ) public onlyBeforeReveal timedTransitions atStage(Stages.PreMinting) {
+    ) private onlyBeforeReveal atStage(Stages.PreMinting) {
         commitment[msg.sender] = _commitment;
         emit CommitmentSubmitted(_commitment);
     }
 
-    function reveal(
-        uint256 _tokenId
-    ) external onlyAfterReveal timedTransitions atStage(Stages.PostMinting) {
+    function reveal(uint256 _tokenId) external onlyAfterReveal {
         require(
             keccak256(abi.encodePacked(_tokenId)) == commitment[msg.sender],
             "Invalid reveal."
@@ -185,7 +184,7 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
     }
 
     function canReveal() public view returns (bool) {
-        return block.number >= revealBlockNumber && !revealed;
+        return block.number >= revealBlockNumber[msg.sender] && !revealed;
     }
 
     function nextStage() private {

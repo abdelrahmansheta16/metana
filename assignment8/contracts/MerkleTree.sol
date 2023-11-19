@@ -8,6 +8,9 @@ import {BitMaps} from "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 contract AirDropToken is ERC721, ERC721Burnable, Ownable {
+
+    error CustomError(string message);
+
     enum Stages {
         PreMinting,
         PostMinting,
@@ -35,18 +38,20 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
     event AllocationRevealed(address recipient, uint256 nftID);
 
     modifier onlyBeforeReveal() {
-        require(
-            block.number < revealBlockNumber[msg.sender],
-            "Reveal period has ended."
-        );
+        if(
+            block.number > revealBlockNumber[msg.sender],
+        ){
+            revert CustomError("Airdrop has been already revealed");
+        }
         _;
     }
 
     modifier onlyAfterReveal() {
-        require(
-            block.number >= revealBlockNumber[msg.sender],
-            "Reveal period has not started yet."
-        );
+        if(
+            block.number < revealBlockNumber[msg.sender],
+        ){
+            revert CustomError("You can't claim tokens before the airdrop was revealed");
+        }
         _;
     }
 
@@ -84,14 +89,16 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
     function transferMultiple(address to, uint256[] memory tokenIds) external {
         for (uint256 i = 0; i < tokenIds.length; i++) {
             uint256 tokenId = tokenIds[i];
-            require(
-                ownerOf(tokenId) == msg.sender,
-                "You do not own this token."
-            );
-            require(
-                to != address(0) && to != address(this),
-                "Invalid address."
-            );
+            if(
+                ownerOf(tokenId) != msg.sender,
+            ){
+                revert CustomError("Only the owner of this token can perform this action");
+            }
+            if(
+                to == address(0) && to == address(this),
+            ){
+                revert CustomError("Cannot send to zero or contract address");
+            }
             transferFrom(msg.sender, to, tokenId);
         }
     }
@@ -102,15 +109,17 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
         uint index = uint256(uint160(msg.sender));
 
         // check if already claimed
-        require(
-            !BitMaps.get(whitelistClaimed, index),
-            "Address already claimed"
-        );
+        if(
+            BitMaps.get(whitelistClaimed, index),
+        ){
+            revert CustomError("Already Claimed!");
+        }
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        require(
-            MerkleProof.verify(proof, merkleRoot, leaf),
-            "Invalid Merkle Proof."
-        );
+        if(
+            !MerkleProof.verify(proof, merkleRoot, leaf),
+        ){
+            revert CustomError("Invalid Merkle Proof");
+        }
         BitMaps.setTo(whitelistClaimed, index, true);
         mintedTokens.push(msg.sender);
         revealBlockNumber[msg.sender] = block.number + 10;
@@ -138,15 +147,17 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
 
     function reveal() external onlyAfterReveal {
         uint tokenId = block.prevrandao;
-        require(
-            keccak256(abi.encodePacked(uint256(uint160(msg.sender)))) ==
+        if(
+            keccak256(abi.encodePacked(uint256(uint160(msg.sender)))) !=
                 commitment[msg.sender],
-            "Invalid reveal."
-        );
-        require(
-            !BitMaps.get(revealedTokens, tokenId),
-            "Token already revealed"
-        );
+        ){
+            revert CustomError("Incorrect Commitment");
+        }
+        if(
+            BitMaps.get(revealedTokens, tokenId),
+        ){
+            revert CustomError("Token Already Revealed");
+        }
 
         BitMaps.setTo(revealedTokens, tokenId, true);
         _safeMint(msg.sender, tokenId);
@@ -155,14 +166,11 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
     function withdraw(
         uint256 _tokenId
     ) external onlyAfterReveal timedTransitions atStage(Stages.PostMinting) {
-        require(
-            BitMaps.get(whitelistClaimed, uint(uint160(msg.sender))),
-            "Address is not in the whitelist"
-        );
-        require(
-            !BitMaps.get(didWithdraw, uint(uint160(msg.sender))),
-            "Address already withdrawn"
-        );
+        if(
+            BitMaps.get(didWithdraw, uint(uint160(msg.sender))),
+        ){
+            revert CustomError("Already Withdrawn");
+        }
         BitMaps.setTo(didWithdraw, uint(uint160(msg.sender)), true);
         _burn(_tokenId);
         (bool success, ) = payable(msg.sender).call{value: 1 ether}("");
@@ -178,10 +186,11 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
     }
 
     function nextStage() private {
-        require(
-            stage != Stages.NoSupply,
-            "Cannot transition from final state."
-        );
+        if(
+            stage == Stages.NoSupply,
+        ){
+            revert CustomError('Cannot transition from final state.');
+        }
         stage = Stages(uint256(stage) + 1);
     }
 }

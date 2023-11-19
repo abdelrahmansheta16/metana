@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import {BitMaps} from "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-import "hardhat/console.sol";
-
 contract AirDropToken is ERC721, ERC721Burnable, Ownable {
     enum Stages {
         PreMinting,
@@ -74,19 +72,12 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
     constructor(
         bytes32 _merkleRoot,
         uint _totalSupply,
-        address[] memory whitelist
+        uint _numOfWhiteListMembers
     ) ERC721("AirDropToken", "ADT") Ownable(msg.sender) {
-        setWhiteList(whitelist);
         revealed = false;
         totalSupply = _totalSupply;
         merkleRoot = _merkleRoot;
-        numOfWhiteListMembers = whitelist.length;
-    }
-
-    function setWhiteList(address[] memory _whitelist) private {
-        for (uint i = 0; i < _whitelist.length; i++) {
-            memberIndex[_whitelist[i]] = i;
-        }
+        numOfWhiteListMembers = _numOfWhiteListMembers;
     }
 
     // Transfer multiple NFTs to another address.
@@ -108,8 +99,7 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
     function whitelistMint(
         bytes32[] calldata proof
     ) external timedTransitions atStage(Stages.PreMinting) {
-        uint index = memberIndex[msg.sender];
-        console.log("0 %d", index);
+        uint index = uint256(uint160(msg.sender));
 
         // check if already claimed
         require(
@@ -125,7 +115,6 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
         mintedTokens.push(msg.sender);
         revealBlockNumber[msg.sender] = block.number + 10;
         submitCommitment(keccak256(abi.encodePacked(index)));
-        _safeMint(msg.sender, index);
     }
 
     function normalMint()
@@ -138,7 +127,6 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
         mintedTokens[index] = msg.sender;
         revealBlockNumber[msg.sender] = block.number + 10;
         submitCommitment(keccak256(abi.encodePacked(index)));
-        _safeMint(msg.sender, index);
     }
 
     function submitCommitment(
@@ -148,18 +136,20 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
         emit CommitmentSubmitted(_commitment);
     }
 
-    function reveal(uint256 _tokenId) external onlyAfterReveal {
+    function reveal() external onlyAfterReveal {
+        uint tokenId = block.prevrandao;
         require(
-            keccak256(abi.encodePacked(_tokenId)) == commitment[msg.sender],
+            keccak256(abi.encodePacked(uint256(uint160(msg.sender)))) ==
+                commitment[msg.sender],
             "Invalid reveal."
         );
-        require(memberIndex[msg.sender] == _tokenId, "Only owner can reveal");
         require(
-            !BitMaps.get(revealedTokens, _tokenId),
+            !BitMaps.get(revealedTokens, tokenId),
             "Token already revealed"
         );
 
-        BitMaps.setTo(revealedTokens, _tokenId, true);
+        BitMaps.setTo(revealedTokens, tokenId, true);
+        _safeMint(msg.sender, tokenId);
     }
 
     function withdraw(

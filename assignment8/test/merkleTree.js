@@ -24,7 +24,7 @@ describe('AirDropToken', function () {
         rootHash = merkleTree.getRoot();
 
         AirDropToken = await ethers.getContractFactory('AirDropToken');
-        airDropToken = await AirDropToken.deploy(rootHash, 10, whitelistAddresses);
+        airDropToken = await AirDropToken.deploy(rootHash, 10, whitelistAddresses.length);
         await airDropToken.waitForDeployment();
     });
 
@@ -36,9 +36,11 @@ describe('AirDropToken', function () {
 
     it('should whitelist mint to a user', async function () {
         const hexProof = merkleTree.getHexProof(leafNodes[1]);
-        console.log(hexProof)
         await airDropToken.connect(user).whitelistMint(hexProof);
-
+        for (let i = 0; i < 10; i++) {
+            await ethers.provider.send("evm_mine", []);
+        }
+        await airDropToken.connect(user).reveal();
         const balance = await airDropToken.balanceOf(user.address);
         expect(balance).to.equal(1);
         expect(await airDropToken.totalSupply()).to.equal(10);
@@ -46,13 +48,11 @@ describe('AirDropToken', function () {
 
     it('should reveal after 10 blocks', async function () {
         const hexProof = merkleTree.getHexProof(leafNodes[1]);
-        console.log(hexProof)
         await airDropToken.connect(user).whitelistMint(hexProof);
-        const index = await airDropToken.connect(user).memberIndex(user.address);
         for (let i = 0; i < 10; i++) {
             await ethers.provider.send("evm_mine", []);
         }
-        expect(await airDropToken.connect(user).reveal(index)); // Stages.PreMinting
+        expect(await airDropToken.connect(user).reveal()); // Stages.PreMinting
     });
 
     it('should not mint to non-whitelisted addresses in the pre-minting stage', async function () {

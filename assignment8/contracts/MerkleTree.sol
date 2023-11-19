@@ -174,7 +174,9 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
         BitMaps.setTo(didWithdraw, uint(uint160(msg.sender)), true);
         _burn(_tokenId);
         (bool success, ) = payable(msg.sender).call{value: 1 ether}("");
-        require(success, "Transfer failed");
+        if(!success){
+            revert CustomError("Failed to send Ether");
+        }
     }
 
     function getAllocation() public view returns (uint256) {

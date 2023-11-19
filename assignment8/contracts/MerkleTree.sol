@@ -39,7 +39,7 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
 
     modifier onlyBeforeReveal() {
         if(
-            block.number > revealBlockNumber[msg.sender],
+            block.number > revealBlockNumber[msg.sender]
         ){
             revert CustomError("Airdrop has been already revealed");
         }
@@ -48,7 +48,7 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
 
     modifier onlyAfterReveal() {
         if(
-            block.number < revealBlockNumber[msg.sender],
+            block.number < revealBlockNumber[msg.sender]
         ){
             revert CustomError("You can't claim tokens before the airdrop was revealed");
         }
@@ -90,12 +90,12 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
         for (uint256 i = 0; i < tokenIds.length; i++) {
             uint256 tokenId = tokenIds[i];
             if(
-                ownerOf(tokenId) != msg.sender,
+                ownerOf(tokenId) != msg.sender
             ){
                 revert CustomError("Only the owner of this token can perform this action");
             }
             if(
-                to == address(0) && to == address(this),
+                to == address(0) && to == address(this)
             ){
                 revert CustomError("Cannot send to zero or contract address");
             }
@@ -110,13 +110,13 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
 
         // check if already claimed
         if(
-            BitMaps.get(whitelistClaimed, index),
+            BitMaps.get(whitelistClaimed, index)
         ){
             revert CustomError("Already Claimed!");
         }
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
         if(
-            !MerkleProof.verify(proof, merkleRoot, leaf),
+            !MerkleProof.verify(proof, merkleRoot, leaf)
         ){
             revert CustomError("Invalid Merkle Proof");
         }
@@ -149,12 +149,12 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
         uint tokenId = block.prevrandao;
         if(
             keccak256(abi.encodePacked(uint256(uint160(msg.sender)))) !=
-                commitment[msg.sender],
+                commitment[msg.sender]
         ){
             revert CustomError("Incorrect Commitment");
         }
         if(
-            BitMaps.get(revealedTokens, tokenId),
+            BitMaps.get(revealedTokens, tokenId)
         ){
             revert CustomError("Token Already Revealed");
         }
@@ -167,7 +167,7 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
         uint256 _tokenId
     ) external onlyAfterReveal timedTransitions atStage(Stages.PostMinting) {
         if(
-            BitMaps.get(didWithdraw, uint(uint160(msg.sender))),
+            BitMaps.get(didWithdraw, uint(uint160(msg.sender)))
         ){
             revert CustomError("Already Withdrawn");
         }
@@ -189,7 +189,7 @@ contract AirDropToken is ERC721, ERC721Burnable, Ownable {
 
     function nextStage() private {
         if(
-            stage == Stages.NoSupply,
+            stage == Stages.NoSupply
         ){
             revert CustomError('Cannot transition from final state.');
         }

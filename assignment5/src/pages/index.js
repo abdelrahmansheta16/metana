@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Chart from 'chart.js/auto';
-import { Line } from 'react-chartjs-2';
+import { Bar, Line } from 'react-chartjs-2';
 import { ethers } from 'ethers';
 const { Network, Alchemy } = require("alchemy-sdk");
 
@@ -53,9 +52,10 @@ const AllCharts = () => {
                 let transferVolume = 0;
                 for (const event of transferEvents) {
                     if (event.blockNumber == blockNumber) {
-                        transferVolume++;
+                        transferVolume += parseInt(event.data, 16);
                     }
                 }
+                console.log(transferVolume);
                 transferVolumeData.push(transferVolume);
                 blockNumbers.push(blockNumber);
             }
@@ -146,16 +146,38 @@ const AllCharts = () => {
             },
         ],
     };
+    const comparison = {
+        labels: gasRatioBlockNumbers,
+        datasets: [
+            {
+                label: 'GasUsed/GasLimit Ratio (%)',
+                data: gasRatioData,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: false,
+            },
+            {
+                label: 'BASEFEE',
+                data: basefeeData.map(fee => fee/100000000),
+                borderColor: 'rgba(75, 152, 132, 1)',
+                borderWidth: 2,
+                fill: false,
+            }
+        ],
+    };
     return (
-        <div>
+        <div >
             <h2>ERC20 Token Transfer Volume Chart</h2>
-            <Line data={transferData} />
+            <Bar data={transferData} />
 
             <h2>BASEFEE Chart</h2>
             <Line data={baseData} />
 
             <h2>GasUsed/GasLimit Ratio Chart</h2>
             <Line data={ratioData} />
+
+            <h2>Comparison</h2>
+            <Line data={comparison} />
         </div>
     );
 };

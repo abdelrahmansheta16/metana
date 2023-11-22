@@ -52,14 +52,13 @@ describe("TokenSale", function () {
       });
 
       it("Should revert with the right error if insufficient balance", async function () {
-        const amount = ethers.parseEther("100");
 
         const { tokenSale, otherAccount } = await loadFixture(
           deployOneYearLockFixture
         );
 
         // We use lock.connect() to send a transaction from another account
-        await expect(tokenSale.connect(otherAccount).sellBack(amount)).to.be.revertedWith(
+        await expect(tokenSale.connect(otherAccount).sellBack(100)).to.be.revertedWith(
           "Insufficient balance"
         );
       });
@@ -76,13 +75,11 @@ describe("TokenSale", function () {
       });
 
       it("Should revert if contract balance is less than amount needed", async function () {
-        const { tokenSale, otherAccount } = await loadFixture(
+        const { tokenSale, owner, otherAccount } = await loadFixture(
           deployOneYearLockFixture
         );
         await tokenSale.connect(otherAccount).purchaseTokens({ value: ethers.parseEther("1") });
-        // const balance = await ethers.provider.getBalance(tokenSale.target);
-        // console.log("balance: ", balance);
-        await expect(tokenSale.connect(otherAccount).sellBack(500)).not.to.be.reverted;
+        await expect(tokenSale.connect(otherAccount).sellBack(4500)).to.be.revertedWith("Insufficient Ether in the contract");
       });
     });
 

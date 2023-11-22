@@ -111,22 +111,4 @@ contract ForgingContract is MyERC1155Token {
         // Mint the 'to' token to the sender
         _mint(msg.sender, toTokenId, amount, "");
     }
-
-    // Function to withdraw tokens from this contract (only for the owner)
-    function withdrawTokens(
-        uint256 tokenId,
-        uint256 amount
-    ) external onlyOwner {
-        require(tokenId >= 0 && tokenId <= 6, "Invalid token ID");
-        require(amount > 0, "Amount must be greater than 0");
-
-        // Transfer tokens to the owner
-        tokenContract.safeTransferFrom(
-            address(this),
-            msg.sender,
-            tokenId,
-            amount,
-            ""
-        );
-    }
 }

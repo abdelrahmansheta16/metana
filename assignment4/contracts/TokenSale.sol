@@ -44,6 +44,13 @@ contract TokenSale is ERC20, Ownable {
 
     // Function to allow users to sell back their tokens and receive a refund
     function sellBack(uint256 amount) external {
+        
+        uint256 refundAmount = ((amount * 10 ** 18) / 2000);
+
+        if (address(this).balance < refundAmount) {
+            revert("Insufficient Ether in the contract");
+        }
+
         if (amount <= 0) {
             revert("Amount must be greater than 0");
         }
@@ -51,11 +58,6 @@ contract TokenSale is ERC20, Ownable {
             revert("Insufficient balance");
         }
 
-        uint256 refundAmount = ((amount * 10 ** 18) / 2000);
-
-        if (address(this).balance < refundAmount) {
-            revert("Insufficient Ether in the contract");
-        }
 
         _transfer(msg.sender, address(this), amount);
         payable(msg.sender).transfer(refundAmount);
